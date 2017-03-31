@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/LightORM.iml" filepath="$PROJECT_DIR$/LightORM.iml" />
+      <module fileurl="file://$PROJECT_DIR$/lightorm-annotations/lightorm-annotations.iml" filepath="$PROJECT_DIR$/lightorm-annotations/lightorm-annotations.iml" />
+      <module fileurl="file://$PROJECT_DIR$/lightorm-compiler/lightorm-compiler.iml" filepath="$PROJECT_DIR$/lightorm-compiler/lightorm-compiler.iml" />
+      <module fileurl="file://$PROJECT_DIR$/lightorm-runtime/lightorm-runtime.iml" filepath="$PROJECT_DIR$/lightorm-runtime/lightorm-runtime.iml" />
+      <module fileurl="file://$PROJECT_DIR$/sample/sample.iml" filepath="$PROJECT_DIR$/sample/sample.iml" />
+    </modules>
+  </component>
+</project>

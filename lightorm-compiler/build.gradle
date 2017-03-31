@@ -1,0 +1,14 @@
+apply plugin: 'java'
+
+dependencies {
+    compileOnly project(":lightorm-annotations")
+    compileOnly project(":lightorm-runtime")
+    compile 'com.google.android:android:4.1.1.4'
+
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.squareup:javapoet:1.7.0'
+    compile 'com.google.auto.service:auto-service:1.0-rc2'
+}
+
+sourceCompatibility = "1.7"
+targetCompatibility = "1.7"
