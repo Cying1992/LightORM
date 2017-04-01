@@ -5,7 +5,7 @@ import android.text.TextUtils;
 
 /**
  * Created by Cying on 17/3/30.
- * email:chengying@souche.com
+
  */
 public class DatabaseConfiguration {
 
@@ -28,9 +28,14 @@ public class DatabaseConfiguration {
     /**
      * 数据库名称
      *
-     * @param databaseName 数据库名称会忽略所有空白字符
+     * @param databaseName    数据库名称会忽略所有空白字符
+     * @param databaseVersion 设置数据库版本，若版本号小于1，则取1
      */
-    public DatabaseConfiguration(String databaseName) {
+    public DatabaseConfiguration(String databaseName, int databaseVersion) {
+        if (databaseVersion < 1) {
+            throw new IllegalArgumentException("数据库版本号不能小于1");
+        }
+        this.databaseVersion = databaseVersion;
         this.databaseName = databaseName == null ? null : databaseName.trim();
         if (TextUtils.isEmpty(databaseName)) {
             throw new IllegalArgumentException("数据库名称不能为空");
@@ -55,25 +60,13 @@ public class DatabaseConfiguration {
 
 
     /**
-     * 设置数据库版本，若版本号小于1，则取1
-     *
-     * @param databaseVersion 数据库版本号
-     * @return
-     */
-    public DatabaseConfiguration setDatabaseVersion(int databaseVersion) {
-        this.databaseVersion = databaseVersion;
-        return this;
-    }
-
-    /**
      * 设置数据库降级回调函数
      *
      * @param downGradeListener 降级回调函数
      * @return
      */
-    public DatabaseConfiguration setDownGradeListener(DatabaseGradeListener downGradeListener) {
+    public void setDownGradeListener(DatabaseGradeListener downGradeListener) {
         this.downGradeListener = downGradeListener;
-        return this;
     }
 
     /**
@@ -82,8 +75,7 @@ public class DatabaseConfiguration {
      * @param upGradeListener 升级回调函数
      * @return
      */
-    public DatabaseConfiguration setUpGradeListener(DatabaseGradeListener upGradeListener) {
+    public void setUpGradeListener(DatabaseGradeListener upGradeListener) {
         this.upGradeListener = upGradeListener;
-        return this;
     }
 }

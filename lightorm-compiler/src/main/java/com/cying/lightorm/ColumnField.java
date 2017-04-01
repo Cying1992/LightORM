@@ -5,7 +5,7 @@ import javax.lang.model.element.VariableElement;
 
 /**
  * Created by Cying on 17/3/29.
- * email:chengying@souche.com
+
  */
 class ColumnField {
 
@@ -30,9 +30,20 @@ class ColumnField {
 
         columnNotNull = column.notNull();
         columnUnique = column.unique();
-        columnType = ColumnType.getFiledType(fieldElement);
+        columnType = ColumnType.getColumnType(fieldElement);
+        if (columnType == null) {
+            LightORMProcessor.error(fieldElement, "不支持这个类型");
+        } else {
+            prepareColumnSQL();
+        }
+    }
 
-        prepareColumnSQL();
+    BaseDao.FieldType getFieldType() {
+        if (columnType == null) {
+            return null;
+        }
+
+        return columnType.getFieldType();
     }
 
     VariableElement getFieldElement() {

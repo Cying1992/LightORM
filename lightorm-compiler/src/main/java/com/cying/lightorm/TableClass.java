@@ -13,9 +13,7 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.lang.model.element.Element;
@@ -32,6 +30,7 @@ import static com.cying.lightorm.Constants.FIELD_META_DATA;
 import static com.cying.lightorm.Constants.FIELD_PRIMARY_KEY;
 import static com.cying.lightorm.Constants.FIELD_SQL_CREATE;
 import static com.cying.lightorm.Constants.FIELD_TABLE;
+import static com.cying.lightorm.Constants.METHOD_COLLECT_FIELD_TYPES;
 import static com.cying.lightorm.Constants.METHOD_CURSOR_TO_ENTITY;
 import static com.cying.lightorm.Constants.METHOD_ENTITY_TO_VALUES;
 import static com.cying.lightorm.Constants.METHOD_GET_IDENTITY;
@@ -45,7 +44,7 @@ import static com.cying.lightorm.LightORMProcessor.error;
 
 /**
  * Created by Cying on 17/3/29.
- * email:chengying@souche.com
+
  */
 class TableClass {
 
@@ -220,6 +219,7 @@ class TableClass {
         addSetIdentityMethod(typeBuilder);
         addCursorToEntityMethod(typeBuilder);
         addEntityToValuesMethod(typeBuilder);
+        addCollectFieldTypesMethod(typeBuilder);
 
         JavaFile javaFile = JavaFile.builder(packageName, typeBuilder.build())
                 .build();
@@ -296,31 +296,12 @@ class TableClass {
                 .addStatement("$L.$L = getLong($L,$S)", PARAM_NAME_ENTITY, primaryKeyFieldName, PARAM_NAME_CURSOR, primaryKeyColumnName);
 
 
-        List<Object> params = new ArrayList<>();
         for (ColumnField columnField : columnFieldMap.values()) {
             ColumnType columnType = columnField.getColumnType();
-            StringBuilder formatBuilder = new StringBuilder();
-            formatBuilder.append("$L.$L = ");
-            params.add(PARAM_NAME_ENTITY);
-            params.add(columnField.getFieldName());
-
-
-            formatBuilder.append(columnType.getCursorMethodName())
-                    .append("(");
-
-            //enum需要特殊处理
-            if (columnType.isEnum()) {
-                formatBuilder.append("$T.class, ");
-                params.add(columnField.getFieldElement().asType());
+            if (columnType == null) {
+                continue;
             }
-
-            formatBuilder.append("$L,$S)");
-
-            params.add(PARAM_NAME_CURSOR);
-            params.add(columnField.getColumnName());
-
-            cursorToEntityMethod.addStatement(formatBuilder.toString(), params.toArray());
-            params.clear();
+            cursorToEntityMethod.addStatement("$L.$L = $L($L,$S)", PARAM_NAME_ENTITY, columnField.getFieldName(), columnType.getCursorMethodName(), PARAM_NAME_CURSOR, columnField.getColumnName());
         }
 
         cursorToEntityMethod.addStatement("return $L", PARAM_NAME_ENTITY);
@@ -340,6 +321,9 @@ class TableClass {
         for (ColumnField columnField : columnFieldMap.values()) {
 
             ColumnType columnType = columnField.getColumnType();
+            if (columnType == null) {
+                continue;
+            }
             StringBuilder formatBuilder = new StringBuilder();
             formatBuilder.append("$L.put($S,");
 
@@ -357,4 +341,24 @@ class TableClass {
         builder.addMethod(entityToValuesMethod.build());
 
     }
+
+    private void addCollectFieldTypesMethod(TypeSpec.Builder builder) {
+        ParameterizedTypeName mapTypeName = ParameterizedTypeName.get(HashMap.class, String.class, BaseDao.FieldType.class);
+        MethodSpec.Builder collectFieldTypesMethod = MethodSpec.methodBuilder(METHOD_COLLECT_FIELD_TYPES)
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PROTECTED)
+                .returns(mapTypeName)
+                .addStatement("$T $L=new $T()", mapTypeName, PARAM_NAME_VALUE, mapTypeName);
+        for (ColumnField columnField : columnFieldMap.values()) {
+            BaseDao.FieldType fieldType = columnField.getFieldType();
+            if (fieldType != null) {
+                collectFieldTypesMethod.addStatement("$L.put($S,$T.$L)", PARAM_NAME_VALUE, columnField.getColumnName(), BaseDao.FieldType.class, fieldType);
+            }
+        }
+
+        collectFieldTypesMethod.addStatement("return $L", PARAM_NAME_VALUE);
+        builder.addMethod(collectFieldTypesMethod.build());
+
+    }
+
 }

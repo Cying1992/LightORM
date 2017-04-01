@@ -1,8 +1,5 @@
 package com.cying.lightorm;
 
-import java.math.BigDecimal;
-import java.sql.Timestamp;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,42 +21,27 @@ import static com.cying.lightorm.Constants.CURSOR_TYPE_STRING;
 
 /**
  * Created by Cying on 17/3/29.
- * email:chengying@souche.com
+
  */
 enum ColumnType {
 
     //Integer数据类型
-    BOOLEAN(Boolean.class, COLUMN_TYPE_INTEGER, CURSOR_TYPE_INT, true, false),
-
-    SHORT(Short.class, COLUMN_TYPE_INTEGER, CURSOR_TYPE_SHORT, false, false),
-
-    INTEGER(Integer.class, COLUMN_TYPE_INTEGER, CURSOR_TYPE_INT, false, false),
-
-    BYTE(Byte.class, COLUMN_TYPE_INTEGER, CURSOR_TYPE_INT, true, false),
-
-    CHARACTER(Character.class, COLUMN_TYPE_INTEGER, CURSOR_TYPE_INT, true, true),
-
-    LONG(Long.class, COLUMN_TYPE_INTEGER, CURSOR_TYPE_LONG, false, false),
-
-    CALENDAR(Calendar.class, COLUMN_TYPE_INTEGER, CURSOR_TYPE_LONG, true, true),
-
-    DATE(Date.class, COLUMN_TYPE_INTEGER, CURSOR_TYPE_LONG, true, true),
-
-    TIMESTAMP(Timestamp.class, COLUMN_TYPE_INTEGER, CURSOR_TYPE_LONG, true, true),
+    BOOLEAN(Boolean.class, BaseDao.FieldType.BOOLEAN, COLUMN_TYPE_INTEGER, CURSOR_TYPE_INT, true, false),
+    SHORT(Short.class, BaseDao.FieldType.INTEGER, COLUMN_TYPE_INTEGER, CURSOR_TYPE_SHORT, false, false),
+    INTEGER(Integer.class, BaseDao.FieldType.INTEGER, COLUMN_TYPE_INTEGER, CURSOR_TYPE_INT, false, false),
+    BYTE(Byte.class, BaseDao.FieldType.INTEGER, COLUMN_TYPE_INTEGER, CURSOR_TYPE_INT, true, false),
+    LONG(Long.class, BaseDao.FieldType.INTEGER, COLUMN_TYPE_INTEGER, CURSOR_TYPE_LONG, false, false),
+    DATE(Date.class, BaseDao.FieldType.DATE, COLUMN_TYPE_INTEGER, CURSOR_TYPE_LONG, true, true),
 
     //Real数据类型
-    DOUBLE(Double.class, COLUMN_TYPE_REAL, CURSOR_TYPE_DOUBLE, false, false),
-
-    FLOAT(Float.class, COLUMN_TYPE_REAL, CURSOR_TYPE_FLOAT, false, false),
+    DOUBLE(Double.class, BaseDao.FieldType.DOUBLE, COLUMN_TYPE_REAL, CURSOR_TYPE_DOUBLE, false, false),
+    FLOAT(Float.class, BaseDao.FieldType.FLOAT, COLUMN_TYPE_REAL, CURSOR_TYPE_FLOAT, false, false),
 
     //Text数据类型
-    ENUM(Enum.class, COLUMN_TYPE_TEXT, CURSOR_TYPE_STRING, true, true),
-    STRING(String.class, COLUMN_TYPE_TEXT, CURSOR_TYPE_STRING, false, false),
-    BIG_DECIMAL(BigDecimal.class, COLUMN_TYPE_TEXT, CURSOR_TYPE_STRING, true, true),
+    STRING(String.class, BaseDao.FieldType.STRING, COLUMN_TYPE_TEXT, CURSOR_TYPE_STRING, false, false),
 
     //CursorType.BLOB
-    BLOB(byte[].class, COLUMN_TYPE_BLOB, CURSOR_TYPE_BLOB, false, false);
-
+    BLOB(byte[].class, BaseDao.FieldType.BINARY, COLUMN_TYPE_BLOB, CURSOR_TYPE_BLOB, false, false);
 
     private static final Map<String, ColumnType> allFieldTypes = new HashMap<>();
 
@@ -76,16 +58,22 @@ enum ColumnType {
     private final boolean convertContentValues;
 
     private final Class<?> typeClass;
+    private final BaseDao.FieldType fieldType;
 
-    ColumnType(Class<?> typeClass, String columnType, String cursorType, boolean convertCursor, boolean convertContentValues) {
+    ColumnType(Class<?> typeClass, BaseDao.FieldType fieldType, String columnType, String cursorType, boolean convertCursor, boolean convertContentValues) {
         this.typeClass = typeClass;
         this.columnType = columnType;
         this.cursorType = cursorType;
         this.convertCursor = convertCursor;
         this.convertContentValues = convertContentValues;
+        this.fieldType = fieldType;
     }
 
-    public String getCursorMethodName() {
+    BaseDao.FieldType getFieldType() {
+        return fieldType;
+    }
+
+    String getCursorMethodName() {
         if (!convertCursor) {
             return "get" + cursorType;
         } else {
@@ -93,8 +81,7 @@ enum ColumnType {
         }
     }
 
-
-    public String getConvertContentValuesMethodName() {
+    String getConvertContentValuesMethodName() {
         if (!convertContentValues) {
             return null;
         }
@@ -102,12 +89,8 @@ enum ColumnType {
         return "values" + typeClass.getSimpleName() + "To" + cursorType;
     }
 
-    public boolean isConvertContentValues() {
+    boolean isConvertContentValues() {
         return convertContentValues;
-    }
-
-    public boolean isEnum() {
-        return Enum.class.equals(typeClass);
     }
 
     @Override
@@ -115,11 +98,11 @@ enum ColumnType {
         return typeClass.getCanonicalName();
     }
 
-    public String getColumnType() {
+    String getColumnType() {
         return columnType;
     }
 
-    static ColumnType getFiledType(Element fieldElement) {
+    static ColumnType getColumnType(Element fieldElement) {
         String type = LightORMProcessor.getFieldClassNameOf(fieldElement);
         return allFieldTypes.get(type);
     }

@@ -5,17 +5,20 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by Cying on 17/3/30.
- * email:chengying@souche.com
  */
 class Database {
 
     final String databaseName;
     final List<String> createSqls = new ArrayList<>();
+
+    private final Map<String, BaseDao> daoMap = new HashMap<>();
 
     private SQLiteOpenHelper helper;
 
@@ -25,6 +28,14 @@ class Database {
 
     Database(String databaseName) {
         this.databaseName = databaseName;
+    }
+
+    void putDao(String tableName, BaseDao dao) {
+        daoMap.put(tableName, dao);
+    }
+
+    BaseDao getDao(String tableName) {
+        return daoMap.get(tableName);
     }
 
     void init(Context context, DatabaseConfiguration databaseConfiguration) {

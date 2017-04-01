@@ -2,7 +2,7 @@ package com.cying.lightorm;
 
 /**
  * Created by Cying on 17/3/29.
- * email:chengying@souche.com
+
  */
 final class Constants {
 
@@ -12,6 +12,7 @@ final class Constants {
     static final String METHOD_SET_IDENTITY = "setIdentity";
     static final String METHOD_CURSOR_TO_ENTITY = "cursorToEntity";
     static final String METHOD_ENTITY_TO_VALUES = "entityToValues";
+    static final String METHOD_COLLECT_FIELD_TYPES = "collectFieldTypes";
 
     static final String FIELD_TABLE = "TABLE_NAME";
     static final String FIELD_DATABASE = "DATABASE_NAME";

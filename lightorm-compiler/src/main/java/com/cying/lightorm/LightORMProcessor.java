@@ -157,18 +157,11 @@ public class LightORMProcessor extends AbstractProcessor {
         if (typeMirror instanceof PrimitiveType) {
             //获得他的包装类型
             fieldClassName = LightORMProcessor.typeUtils.boxedClass((PrimitiveType) typeMirror).getQualifiedName().toString();
-            // = typeMirror.getKind().name().toLowerCase();
-
         } else if (typeMirror instanceof DeclaredType) {
             TypeElement fieldType = (TypeElement) LightORMProcessor.typeUtils.asElement(typeMirror);
-            if (ElementKind.ENUM.equals(fieldType.getKind())) {
-                fieldClassName = Enum.class.getCanonicalName();
-            } else {
-                fieldClassName = fieldType.getQualifiedName().toString();
-            }
+            fieldClassName = fieldType.getQualifiedName().toString();
         } else if (typeMirror instanceof ArrayType && ((ArrayType) typeMirror).getComponentType().getKind() == TypeKind.BYTE) {
             fieldClassName = byte[].class.getCanonicalName();
-
         } else {
             error(fieldElement, "not support this type which field name is %s", fieldElement.getSimpleName());
         }

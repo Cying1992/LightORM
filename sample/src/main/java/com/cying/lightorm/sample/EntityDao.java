@@ -5,9 +5,10 @@ import android.database.Cursor;
 
 import com.cying.lightorm.BaseDao;
 
+import java.util.HashMap;
+
 /**
  * Created by Cying on 17/3/29.
- * email:chengying@souche.com
  */
 public class EntityDao extends BaseDao<Entity> {
 
@@ -37,6 +38,11 @@ public class EntityDao extends BaseDao<Entity> {
     @Override
     public ContentValues entityToValues(Entity entity) {
         ContentValues contentValues = new ContentValues();
+        return null;
+    }
+
+    @Override
+    protected HashMap<String, FieldType> collectFieldTypes() {
         return null;
     }
 }
