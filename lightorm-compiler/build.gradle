@@ -1,7 +1,6 @@
 apply plugin: 'java'
 
 dependencies {
-    compileOnly project(":lightorm-annotations")
     compileOnly project(':lightorm')
     compile 'com.google.android:android:4.1.1.4'
 
