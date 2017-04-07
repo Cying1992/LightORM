@@ -1,6 +1,4 @@
 apply plugin: 'java'
-apply plugin: 'com.github.dcendents.android-maven'
-group = 'com.github.Cying1992.LightORM'
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compileOnly 'com.google.android:android:4.1.1.4'
@@ -11,16 +9,12 @@ dependencies {
 
 sourceCompatibility = "1.7"
 targetCompatibility = "1.7"
-// build a jar with source files
-/*
-task sourcesJar(type: Jar) {
-    from sourceSets.main.java.srcDirs
+
+task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
+    from sourceSets.main.allSource
 }
 
-
-
-// build a jar with javadoc
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
     from javadoc.destinationDir
@@ -29,4 +23,4 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 artifacts {
     archives sourcesJar
     archives javadocJar
-}*/
+}
