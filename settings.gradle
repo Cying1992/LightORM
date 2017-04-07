@@ -1,1 +1,1 @@
-include ':sample', ':lightorm-compiler', ':lightorm-annotations', ':lightorm-runtime'
+include ':sample', ':lightorm-compiler', ':lightorm-annotations', ':lightorm'

@@ -3,7 +3,6 @@ package com.cying.lightorm.sample;
 
 import com.cying.lightorm.Column;
 import com.cying.lightorm.Key;
-import com.cying.lightorm.Table;
 
 import java.util.Date;
 
@@ -12,7 +11,7 @@ import java.util.Date;
  * Date: 2015/7/6
  * Time: 23:02
  */
-@Table("entity")
+//@Table("entity")
 public class TestEntity {
 
     @Key

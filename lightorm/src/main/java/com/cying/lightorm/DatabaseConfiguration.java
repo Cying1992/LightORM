@@ -1,11 +1,12 @@
 package com.cying.lightorm;
 
 import android.database.sqlite.SQLiteDatabase;
+import android.support.annotation.IntRange;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 /**
  * Created by Cying on 17/3/30.
-
  */
 public class DatabaseConfiguration {
 
@@ -31,12 +32,12 @@ public class DatabaseConfiguration {
      * @param databaseName    数据库名称会忽略所有空白字符
      * @param databaseVersion 设置数据库版本，若版本号小于1，则取1
      */
-    public DatabaseConfiguration(String databaseName, int databaseVersion) {
+    public DatabaseConfiguration(@NonNull String databaseName, @IntRange(from = 1) int databaseVersion) {
         if (databaseVersion < 1) {
             throw new IllegalArgumentException("数据库版本号不能小于1");
         }
         this.databaseVersion = databaseVersion;
-        this.databaseName = databaseName == null ? null : databaseName.trim();
+        this.databaseName = databaseName.trim();
         if (TextUtils.isEmpty(databaseName)) {
             throw new IllegalArgumentException("数据库名称不能为空");
         }

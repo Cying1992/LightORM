@@ -1,5 +1,7 @@
 package com.cying.lightorm;
 
+import android.support.annotation.NonNull;
+
 /**
  * Created by Cying on 17/4/1.
  * <p>
@@ -49,7 +51,7 @@ public class Sort {
         return this.groupBy(groupBy, null);
     }
 
-    public Sort orderBy(boolean isDesc, String columnName, String... columnNames) {
+    public Sort orderBy(boolean isDesc, @NonNull String columnName, String... columnNames) {
         StringBuilder builder = new StringBuilder(columnName);
         if (columnNames != null) {
             for (String name : columnNames) {

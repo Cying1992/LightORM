@@ -1,5 +1,7 @@
 package com.cying.lightorm;
 
+import android.support.annotation.NonNull;
+
 /**
  * Created by Cying on 17/4/1.
  * <p>
@@ -7,5 +9,6 @@ package com.cying.lightorm;
  */
 public interface EntityInterceptor<T> {
 
-    <T> T process(T entity);
+    @NonNull
+    T process(@NonNull T entity);
 }

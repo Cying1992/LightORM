@@ -14,7 +14,7 @@ import java.util.List;
 class TableQuery<T> {
 
     private static final String SECTION_DELIMITER_AND = "AND ";
-    private static final String SECTION_DELIMITER_OR = "OR";
+    private static final String SECTION_DELIMITER_OR = "OR ";
 
     private static final String PRAGMA_ENABLE_CASE_SENSITIVE_LIKE = "PRAGMA case_sensitive_like=1";
     private static final String PRAGMA_DISABLE_CASE_SENSITIVE_LIKE = "PRAGMA case_sensitive_like=0";
@@ -39,6 +39,7 @@ class TableQuery<T> {
     String limit;
     String orderBy, groupBy, having;
     private boolean caseSensitive = false;
+    private int beginGroupCount = 0;
 
     TableQuery(BaseDao<T> dao) {
         this.dao = dao;
@@ -59,10 +60,6 @@ class TableQuery<T> {
         return this;
     }
 
-    private void clearSort() {
-        this.limit = this.orderBy = this.having = this.groupBy = null;
-    }
-
     TableQuery<T> beginGroup() {
         if (inBeginGroup) {
             throw new IllegalStateException("不能连续调用beginGroup");
@@ -71,6 +68,7 @@ class TableQuery<T> {
         addDelimiter();
 
         inBeginGroup = true;
+        beginGroupCount++;
         selection.append("(");
         return this;
     }
@@ -79,8 +77,12 @@ class TableQuery<T> {
         if (isOr) {
             throw new IllegalStateException("or后必须有条件");
         }
+        if (inBeginGroup) {
+            throw new IllegalStateException("beginGroup和endGroup之间必须有条件");
+        }
         selection.append(")");
         inBeginGroup = false;
+        beginGroupCount--;
         return this;
     }
 
@@ -233,15 +235,15 @@ class TableQuery<T> {
 
 
     TableQuery<T> isEmpty(String columnName) {
-        beginGroup().isNull(columnName).or();
-        selection.append("LENGTH(").append(columnName).append(")=0 ");
-        return endGroup();
+        //beginGroup().addDelimiter().isNull(columnName).or();
+        selection.append("(").append(columnName).append(" IS NULL OR ").append("LENGTH(").append(columnName).append(")=0) ");
+        return this;
     }
 
     TableQuery<T> isNotEmpty(String columnName) {
-        beginGroup().isNotNull(columnName).addDelimiter();
-        selection.append("LENGTH(").append(columnName).append(")!=0 ");
-        return endGroup();
+        //beginGroup().addDelimiter().isNotNull(columnName).addDelimiter();
+        selection.append("(").append(columnName).append(" IS NOT NULL AND ").append("LENGTH(").append(columnName).append(")!=0) ");
+        return this;
     }
 
     boolean exists() {
@@ -275,12 +277,21 @@ class TableQuery<T> {
         dao.closeDatabase();
     }
 
-    private Cursor query() {
+    void checkEndGroup() {
+        if (beginGroupCount != 0) {
+            throw new IllegalStateException("beginGroup和endGroup方法必须成对出现");
+        }
+    }
 
-        return getDatabase().rawQuery(buildSql(), selectionArgs.toArray(new String[selectionArgs.size()]));
+    private Cursor query() {
+        checkEndGroup();
+        Cursor cursor = getDatabase().rawQuery(buildSql(), getSelectionArgs());
+        clearSql();
+        return cursor;
     }
 
     private Number queryNumber(String sqliteFunctionName, String columnName, Class<? extends Number> numberClass) {
+        checkEndGroup();
         Number result = null;
         selectWhat = sqliteFunctionName + "(" + columnName + ")";
         Cursor cursor = query();
@@ -293,6 +304,7 @@ class TableQuery<T> {
         }
         cursor.close();
         closeDatabase();
+        clearSql();
         return result;
     }
 
@@ -315,7 +327,6 @@ class TableQuery<T> {
         Cursor cursor = query();
         List<T> list = dao.cursorToEntityList(cursor);
         closeDatabase();
-        clearSort();
         return list;
     }
 
@@ -344,6 +355,15 @@ class TableQuery<T> {
         this.selectWhat = ALL_COLUMNS;
         this.selectionArgs.clear();
         this.caseSensitive = false;
+        this.beginGroupCount = 0;
+    }
+
+    String getSelection() {
+        return selection == null ? null : selection.toString();
+    }
+
+    String[] getSelectionArgs() {
+        return selectionArgs.toArray(new String[selectionArgs.size()]);
     }
 
     private String buildSql() {
@@ -358,7 +378,7 @@ class TableQuery<T> {
         query.append(selectWhat);
         query.append(" FROM ");
         query.append(metaData.getTableName());
-        appendClause(query, " WHERE ", selection.toString());
+        appendClause(query, " WHERE ", getSelection());
         appendClause(query, " GROUP BY ", groupBy);
         appendClause(query, " HAVING ", having);
         appendClause(query, " ORDER BY ", orderBy);

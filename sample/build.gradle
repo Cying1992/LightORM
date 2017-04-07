@@ -26,7 +26,11 @@ dependencies {
     })
     compile 'com.android.support:appcompat-v7:25.3.1'
     testCompile 'junit:junit:4.12'
-    compile project(':lightorm-runtime')
+    compile project(':lightorm')
     compile project(':lightorm-annotations')
     annotationProcessor project(':lightorm-compiler')
+
+    testAnnotationProcessor project(':lightorm-compiler')
+    testCompile "org.robolectric:robolectric:$rootProject.ext.robolectricVersion"
+
 }

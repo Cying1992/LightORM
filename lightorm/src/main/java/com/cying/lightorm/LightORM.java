@@ -2,6 +2,8 @@ package com.cying.lightorm;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -44,7 +46,7 @@ public final class LightORM {
      * @param defaultDatabaseConfiguration 默认数据库的配置
      * @param otherDatabaseConfigurations  其他数据库的配置信息
      */
-    public static void init(Context context, DatabaseConfiguration defaultDatabaseConfiguration, DatabaseConfiguration... otherDatabaseConfigurations) {
+    public static void init(@NonNull Context context, @NonNull DatabaseConfiguration defaultDatabaseConfiguration, DatabaseConfiguration... otherDatabaseConfigurations) {
         INSTANCE.initSelf(context, defaultDatabaseConfiguration, otherDatabaseConfigurations);
     }
 
@@ -104,9 +106,10 @@ public final class LightORM {
             }
         }
 
+        hasInit = true;
         try {
             //触发saveDao，收集所有BaseDao对象
-            Class.forName(PACKAGE_DAO_COLLECTIONS + "." + CLASS_DAO_COLLECTIONS);
+            Class.forName(PACKAGE_DAO_COLLECTIONS + "." + CLASS_DAO_COLLECTIONS).newInstance();
         } catch (Exception e) {
             throw new IllegalStateException("LightORM初始化失败", e);
         }
@@ -117,9 +120,9 @@ public final class LightORM {
         }
 
         databaseConfigurationMap.clear();
-        hasInit = true;
     }
 
+    @NonNull
     public String getDefaultDatabaseName() {
         return defaultDatabaseName;
     }
@@ -130,9 +133,25 @@ public final class LightORM {
      * @param databaseName 数据库名称
      * @return 数据库
      */
-    public SQLiteDatabase openDatabase(String databaseName) {
+    public SQLiteDatabase openDatabase(@NonNull String databaseName) {
         databaseName = TextUtils.isEmpty(databaseName) ? defaultDatabaseName : databaseName;
         return databaseMap.get(databaseName).open();
+    }
+
+    /**
+     * 打开默认数据库
+     *
+     * @return
+     */
+    public SQLiteDatabase openDatabase() {
+        return openDatabase(defaultDatabaseName);
+    }
+
+    /**
+     * 关闭默认数据库
+     */
+    public void closeDatabase() {
+        closeDatabase(defaultDatabaseName);
     }
 
     /**
@@ -140,13 +159,13 @@ public final class LightORM {
      *
      * @param databaseName 数据库名称
      */
-    public void closeDatabase(String databaseName) {
+    public void closeDatabase(@NonNull String databaseName) {
         databaseName = TextUtils.isEmpty(databaseName) ? defaultDatabaseName : databaseName;
         databaseMap.get(databaseName).close();
     }
 
     @SuppressWarnings("unchecked")
-    public <T> BaseDao<T> getDao(Class<T> entityClass) {
+    <T> BaseDao<T> getDao(Class<T> entityClass) {
         BaseDao<T> dao = (BaseDao<T>) daoMap.get(entityClass);
         if (dao == null) {
             throw new IllegalArgumentException("未找到类" + entityClass.getCanonicalName() + "对应的BaseDao");
@@ -161,7 +180,7 @@ public final class LightORM {
      * @param tableName
      * @return 返回对应的BaseDao, 若不存在 则返回null
      */
-    public BaseDao<?> getDao(String databaseName, String tableName) {
+    BaseDao<?> getDao(String databaseName, String tableName) {
         Database database = databaseMap.get(databaseName);
         BaseDao<?> result = null;
         if (database != null) {
@@ -182,28 +201,43 @@ public final class LightORM {
      * @return 插入的数据行主键值
      */
     @SuppressWarnings("unchecked")
-    public <T> long save(T entity) {
+    public <T> long save(@NonNull T entity) {
         BaseDao<T> baseDao = getDao((Class<T>) entity.getClass());
         return baseDao.save(entity);
     }
 
-    public <T> void saveAll(Class<T> entityClass, Iterator<T> entities) {
+    public <T> void saveAll(@NonNull Class<T> entityClass, @NonNull Iterator<T> entities) {
         BaseDao<T> baseDao = getDao(entityClass);
         baseDao.saveAll(entities);
     }
 
-    public <T> void deleteAll(Class<T> entityClass, Iterator<T> entities) {
+    public <T> void deleteAll(@NonNull Class<T> entityClass, @NonNull Iterator<T> entities) {
         BaseDao<T> baseDao = getDao(entityClass);
         baseDao.deleteAll(entities);
     }
 
-    public <T> int deleteAll(Class<T> entityClass) {
+    public <T> int deleteAll(@NonNull Class<T> entityClass) {
         return deleteAll(entityClass, (String) null);
     }
 
-    public <T> int deleteAll(Class<T> entityClass, String whereClause, String... whereArgs) {
+    public <T> int deleteAll(@NonNull Class<T> entityClass, @Nullable String whereClause, String... whereArgs) {
         BaseDao<T> baseDao = getDao(entityClass);
         return baseDao.deleteAll(whereClause, whereArgs);
+    }
+
+    /**
+     * 根据条件删除
+     *
+     * @param query
+     * @param <T>
+     * @return
+     */
+    public <T> int deleteAll(@NonNull Query<T> query) {
+        TableQuery<T> tableQuery = query.query;
+        tableQuery.checkEndGroup();
+        int count = query.dao.deleteAll(tableQuery.getSelection(), tableQuery.getSelectionArgs());
+        query.reset();
+        return count;
     }
 
 
@@ -215,7 +249,7 @@ public final class LightORM {
      * @return 是否删除成功
      */
     @SuppressWarnings("unchecked")
-    public <T> boolean delete(T entity) {
+    public <T> boolean delete(@NonNull T entity) {
         BaseDao<T> baseDao = getDao((Class<T>) entity.getClass());
         return baseDao.delete(entity);
     }
@@ -228,7 +262,7 @@ public final class LightORM {
      * @param interceptor 实体后处理器
      * @param <T>         实体类型
      */
-    public <T> void addEntityIntercetor(Class<T> entityClass, EntityInterceptor<T> interceptor) {
+    public <T> void addEntityInterceptor(@NonNull Class<T> entityClass, @NonNull EntityInterceptor<T> interceptor) {
         BaseDao<T> baseDao = getDao(entityClass);
         baseDao.addEntityInterceptor(interceptor);
     }
@@ -240,7 +274,7 @@ public final class LightORM {
      * @param <T>
      * @return
      */
-    public <T> Query<T> where(Class<T> entityClass) {
+    public <T> Query<T> where(@NonNull Class<T> entityClass) {
         return new Query<>(getDao(entityClass));
     }
 

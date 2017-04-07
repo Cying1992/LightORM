@@ -103,14 +103,17 @@ public class LightORMProcessor extends AbstractProcessor {
         return true;
     }
 
-    private void generateDaoCollectionsClass(List<TableClass> tableClassMap) throws IOException {
+    private void generateDaoCollectionsClass(List<TableClass> tableClassList) throws IOException {
+        if (tableClassList.isEmpty()) {
+            return;
+        }
         TypeSpec.Builder builder = TypeSpec.classBuilder(LightORM.CLASS_DAO_COLLECTIONS)
                 .addModifiers(Modifier.FINAL);
 
         StringBuilder formatBuilder = new StringBuilder();
         List<Object> params = new ArrayList<>();
         formatBuilder.append("try{ \n");
-        for (TableClass tableClass : tableClassMap) {
+        for (TableClass tableClass : tableClassList) {
             formatBuilder.append("    $T.forName($S);\n");
             params.add(Class.class);
             params.add(tableClass.getDaoClassCanonicalName());

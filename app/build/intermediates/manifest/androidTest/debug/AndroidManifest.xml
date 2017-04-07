@@ -4,12 +4,12 @@
 
     <uses-sdk android:minSdkVersion="16" android:targetSdkVersion="25" />
 
-    <instrumentation android:name="android.support.test.runner.AndroidJUnitRunner"
+    <instrumentation android:string="android.support.test.runner.AndroidJUnitRunner"
         android:functionalTest="false" android:handleProfiling="false"
         android:label="Tests for com.cying.lightorm" android:targetPackage="com.cying.lightorm" />
 
     <application>
-        <uses-library android:name="android.test.runner" />
+        <uses-library android:string="android.test.runner" />
     </application>
 
 </manifest>
