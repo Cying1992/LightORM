@@ -1,5 +1,6 @@
 apply plugin: 'java'
-
+apply plugin: 'com.github.dcendents.android-maven'
+group = 'com.github.Cying1992'
 dependencies {
     compileOnly project(':lightorm')
     compile 'com.google.android:android:4.1.1.4'
