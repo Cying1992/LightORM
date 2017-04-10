@@ -64,7 +64,6 @@ public class DatabaseConfiguration {
      * 设置数据库降级回调函数
      *
      * @param downGradeListener 降级回调函数
-     * @return
      */
     public void setDownGradeListener(DatabaseGradeListener downGradeListener) {
         this.downGradeListener = downGradeListener;
@@ -74,7 +73,6 @@ public class DatabaseConfiguration {
      * 设置数据库升级回调函数
      *
      * @param upGradeListener 升级回调函数
-     * @return
      */
     public void setUpGradeListener(DatabaseGradeListener upGradeListener) {
         this.upGradeListener = upGradeListener;
