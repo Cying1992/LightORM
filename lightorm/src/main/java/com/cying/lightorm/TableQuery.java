@@ -27,7 +27,11 @@ class TableQuery<T> {
     static final String FUNCTION_AVG = "AVG";
     private static final String ZERO = "0";
 
-    private BaseDao<T> dao;
+    private final BaseDao<T> dao;
+    String limit;
+    String orderBy, groupBy, having;
+    boolean distinct;
+
     private BaseDao.MetaData metaData;
     private StringBuilder selection;
     private String selectWhat = ALL_COLUMNS;
@@ -36,14 +40,19 @@ class TableQuery<T> {
     private boolean inBeginGroup = false;
 
     private final List<String> selectionArgs = new ArrayList<>();
-    String limit;
-    String orderBy, groupBy, having;
+
     private boolean caseSensitive = false;
     private int beginGroupCount = 0;
 
     TableQuery(BaseDao<T> dao) {
         this.dao = dao;
         this.metaData = dao.getMetaData();
+    }
+
+    void checkColumn(String columnName, BaseDao.FieldType... types) {
+        if (!dao.isColumnValid(columnName, types)) {
+            throw new IllegalArgumentException("数据库'" + metaData.getRealDatabaseName() + "'的表'" + metaData.getTableName() + "'不存在列'" + columnName + "'");
+        }
     }
 
     TableQuery<T> addDelimiter() {
@@ -258,8 +267,8 @@ class TableQuery<T> {
         return funQueryInt(FUNCTION_COUNT, ALL_COLUMNS);
     }
 
-    private SQLiteDatabase getDatabase() {
-        SQLiteDatabase database = dao.getDatabase();
+    private SQLiteDatabase openDatabase() {
+        SQLiteDatabase database = dao.openDatabase();
         if (caseSensitive) {
             database.execSQL(PRAGMA_ENABLE_CASE_SENSITIVE_LIKE);
             LightORM.debug("启用大小写敏感的模糊查询：" + PRAGMA_ENABLE_CASE_SENSITIVE_LIKE);
@@ -269,12 +278,15 @@ class TableQuery<T> {
 
     private void closeDatabase() {
         if (caseSensitive) {
-            dao.getDatabase().execSQL(PRAGMA_DISABLE_CASE_SENSITIVE_LIKE);
-            caseSensitive = false;
-            LightORM.debug("禁用大小写敏感的模糊查询：" + PRAGMA_DISABLE_CASE_SENSITIVE_LIKE);
-
+            SQLiteDatabase openedDatabase = dao.getOpenedDatabase();
+            if (openedDatabase != null) {
+                openedDatabase.execSQL(PRAGMA_DISABLE_CASE_SENSITIVE_LIKE);
+                caseSensitive = false;
+                LightORM.debug("禁用大小写敏感的模糊查询：" + PRAGMA_DISABLE_CASE_SENSITIVE_LIKE);
+            }
         }
         dao.closeDatabase();
+        clearSql();
     }
 
     void checkEndGroup() {
@@ -285,8 +297,7 @@ class TableQuery<T> {
 
     private Cursor query() {
         checkEndGroup();
-        Cursor cursor = getDatabase().rawQuery(buildSql(), getSelectionArgs());
-        clearSql();
+        Cursor cursor = openDatabase().rawQuery(buildSql(), getSelectionArgs());
         return cursor;
     }
 
@@ -304,7 +315,6 @@ class TableQuery<T> {
         }
         cursor.close();
         closeDatabase();
-        clearSql();
         return result;
     }
 
@@ -356,6 +366,7 @@ class TableQuery<T> {
         this.selectionArgs.clear();
         this.caseSensitive = false;
         this.beginGroupCount = 0;
+        this.distinct = false;
     }
 
     String getSelection() {
@@ -375,6 +386,9 @@ class TableQuery<T> {
 
         StringBuilder query = new StringBuilder(120);
         query.append("SELECT ");
+        if (distinct) {
+            query.append("DISTINCT ");
+        }
         query.append(selectWhat);
         query.append(" FROM ");
         query.append(metaData.getTableName());

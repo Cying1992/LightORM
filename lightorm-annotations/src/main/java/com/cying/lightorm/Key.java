@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
  * <p>
  * 标记{@link Table}注解的类的主键字段，只能为{@link Long}或{@code long}类型
  */
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.CLASS)
 @Target(ElementType.FIELD)
 public @interface Key {
 

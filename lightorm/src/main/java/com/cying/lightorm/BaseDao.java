@@ -3,15 +3,18 @@ package com.cying.lightorm;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by Cying on 17/3/29.
@@ -48,7 +51,7 @@ public abstract class BaseDao<T> {
     private MetaData mMetaData;
 
     private Map<String, FieldType> mFieldTypes;
-    private List<EntityInterceptor<T>> mEntityInterceptors;
+    private Set<EntityInterceptor<T>> mEntityInterceptors;
 
     protected BaseDao() {
         mMetaData = getMetaData();
@@ -56,7 +59,7 @@ public abstract class BaseDao<T> {
 
     void addEntityInterceptor(EntityInterceptor<T> interceptor) {
         if (mEntityInterceptors == null) {
-            mEntityInterceptors = new ArrayList<>();
+            mEntityInterceptors = new HashSet<>();
         }
         mEntityInterceptors.add(interceptor);
     }
@@ -151,8 +154,13 @@ public abstract class BaseDao<T> {
 
     protected abstract HashMap<String, FieldType> collectFieldTypes();
 
-    SQLiteDatabase getDatabase() {
+    SQLiteDatabase openDatabase() {
         return LightORM.getInstance().openDatabase(mMetaData.databaseName);
+    }
+
+    @Nullable
+    SQLiteDatabase getOpenedDatabase() {
+        return LightORM.getInstance().getOpenedDatabase(mMetaData.databaseName);
     }
 
     void closeDatabase() {
@@ -200,14 +208,14 @@ public abstract class BaseDao<T> {
         if (entityId != null && entityId < 1) {
             values.putNull(mMetaData.primaryKey);
         }
-        id = getDatabase().insertWithOnConflict(mMetaData.tableName, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+        id = openDatabase().insertWithOnConflict(mMetaData.tableName, null, values, SQLiteDatabase.CONFLICT_REPLACE);
         setIdentity(entity, id);
         closeDatabase();
         return id;
     }
 
     void saveAll(Iterator<T> entities) {
-        SQLiteDatabase db = getDatabase();
+        SQLiteDatabase db = openDatabase();
         db.beginTransaction();
         try {
             T entity;
@@ -234,7 +242,7 @@ public abstract class BaseDao<T> {
     }
 
     /**
-     * 级联删除
+     * 删除{@code entity}对应数据行记录
      *
      * @param entity
      * @return 是否删除成功
@@ -242,7 +250,7 @@ public abstract class BaseDao<T> {
     boolean delete(T entity) {
         if (entity == null) return false;
         if (getIdentity(entity) != null) {
-            boolean result = getDatabase().delete(mMetaData.tableName, mMetaData.primaryKey + "=?",
+            boolean result = openDatabase().delete(mMetaData.tableName, mMetaData.primaryKey + "=?",
                     new String[]{String.valueOf(getIdentity(entity))}) == 1;
             closeDatabase();
 
@@ -252,7 +260,7 @@ public abstract class BaseDao<T> {
     }
 
     void deleteAll(Iterator<T> entities) {
-        SQLiteDatabase db = getDatabase();
+        SQLiteDatabase db = openDatabase();
         db.beginTransaction();
         try {
             T entity;
@@ -275,7 +283,7 @@ public abstract class BaseDao<T> {
     }
 
     int deleteAll(String whereClause, String... whereArgs) {
-        int result = getDatabase().delete(mMetaData.tableName, whereClause, whereArgs);
+        int result = openDatabase().delete(mMetaData.tableName, whereClause, whereArgs);
         closeDatabase();
         return result;
     }
@@ -291,19 +299,23 @@ public abstract class BaseDao<T> {
             this.primaryKey = primaryKey;
         }
 
-        public String getCreateSql() {
+        String getCreateSql() {
             return createSql;
         }
 
-        public String getDatabaseName() {
+        String getDatabaseName() {
             return databaseName;
         }
 
-        public String getPrimaryKey() {
+        String getRealDatabaseName() {
+            return TextUtils.isEmpty(databaseName) ? LightORM.getInstance().getDefaultDatabaseName() : databaseName;
+        }
+
+        String getPrimaryKey() {
             return primaryKey;
         }
 
-        public String getTableName() {
+        String getTableName() {
             return tableName;
         }
     }

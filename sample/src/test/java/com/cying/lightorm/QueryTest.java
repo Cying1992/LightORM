@@ -2,6 +2,7 @@ package com.cying.lightorm;
 
 import android.app.Activity;
 
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,20 +27,29 @@ public class QueryTest {
     static final LightORM orm;
     static final BaseDao<Entity> dao;
     static final Query<Entity> query;
+    static final String databaseName = "test_database";
+    static final Database database;
 
     static {
-        DatabaseConfiguration config = new DatabaseConfiguration("test_database", 1);
+        DatabaseConfiguration config = new DatabaseConfiguration(databaseName, 1);
         LightORM.init(Robolectric.setupActivity(Activity.class), config);
         LightORM.setDebug(true);
         orm = LightORM.getInstance();
         dao = orm.getDao(Entity.class);
         query = orm.where(Entity.class);
+        database = orm.findDatabase(databaseName);
     }
 
     @After
-    public void clear() {
+    public void tearDown() {
         orm.deleteAll(Entity.class);
         query.reset();
+        orm.closeDatabase();
+    }
+
+    private void testDatabaseClosed() {
+        assertThat(database.isOpen(), is(false));
+        assertThat(database.getOpenCount(), is(0));
     }
 
     @Test
@@ -55,6 +65,7 @@ public class QueryTest {
         entity.id = 8L;
         assertThat(orm.save(entity), is(8L));
         assertThat(query.count(), is(2L));
+        testDatabaseClosed();
     }
 
     @Test
@@ -64,7 +75,7 @@ public class QueryTest {
         assertThat(query.contains("string", "STR", true).findFirst(), is(nullValue()));
         assertThat(query.like("string", "STRing", false).findFirst(), is(notNullValue()));
         assertThat(query.like("string", "STRing", true).findFirst(), is(nullValue()));
-
+        testDatabaseClosed();
     }
 
     @Test
@@ -76,6 +87,7 @@ public class QueryTest {
         assertThat(orm.deleteAll(query.contains("string", "str")), is(1));
         saveEntity();
         assertThat(orm.deleteAll(query.contains("string", "mm")), is(0));
+        testDatabaseClosed();
     }
 
 
@@ -99,6 +111,7 @@ public class QueryTest {
         checkColumnsValid(BaseDao.FieldType.STRING, "string");
         checkColumnsValid(BaseDao.FieldType.FLOAT, "smallFloat", "bigFloat");
         checkColumnsValid(BaseDao.FieldType.DOUBLE, "smallDouble", "bigDouble");
+        testDatabaseClosed();
     }
 
     private Entity saveEntity() {
@@ -138,6 +151,7 @@ public class QueryTest {
         assertThat(query.equalTo("date", date).findFirst().date, is(date));
         assertThat(query.equalTo("string", "string").findFirst().string, is("string"));
         assertThat(query.equalTo("smallInt", 90).findFirst().smallInt, is(90));
+        testDatabaseClosed();
     }
 
     @Test
@@ -145,7 +159,7 @@ public class QueryTest {
         saveEntity();
         assertThat(query.notEqualTo("string", "string").findFirst(), is(nullValue()));
         assertThat(query.notEqualTo("string", "mm").findFirst(), is(notNullValue()));
-
+        testDatabaseClosed();
     }
 
     @Test
@@ -153,11 +167,11 @@ public class QueryTest {
         saveEntity();
         assertThat(query.contains("string", "String", true).exists(), is(false));
         assertThat(query.contains("string", "String", false).exists(), is(true));
-
+        testDatabaseClosed();
     }
 
     @Test
-    public void or() {
+    public void testOr() {
         saveEntity();
         assertThat(query.equalTo("smallInt", 80).or().equalTo("smallInt", 90).exists(), is(true));
         assertThat(query.equalTo("smallInt", 80).or().equalTo("smallInt", 70).exists(), is(false));
@@ -173,7 +187,7 @@ public class QueryTest {
                         .isEmpty("string")
                         .endGroup()
                         .exists(), is(true));
-
+        testDatabaseClosed();
     }
 
     @Test
@@ -188,7 +202,33 @@ public class QueryTest {
         assertThat(query.isEmpty("string").count(), is(0L));
         assertThat(query.isNotNull("string").count(), is(1L));
         assertThat(query.isNotEmpty("string").count(), is(1L));
+        testDatabaseClosed();
     }
 
 
+    @Test
+    public void testSort() {
+
+        assertThat(query.findAll(Sort.create().distinct(true).limit(1).groupBy("string").orderBy(true, "string", "smallInt").orderBy(false, "bigInt", "bigLong").having("smallDouble>0")), is(Matchers.<Entity>empty()));
+        testDatabaseClosed();
+    }
+
+    @Test
+    public void testOpenDatabase() {
+        orm.openDatabase();
+
+        assertThat(database.getOpenCount(), is(1));
+        orm.closeDatabase();
+        assertThat(database.getOpenCount(), is(0));
+        orm.openDatabase();
+        orm.openDatabase();
+        orm.closeDatabase();
+        assertThat(database.getOpenCount(), is(1));
+        orm.closeDatabase();
+        orm.closeDatabase();
+        orm.closeDatabase();
+        assertThat(database.getOpenCount(), is(0));
+        orm.openDatabase();
+        assertThat(database.getOpenCount(), is(1));
+    }
 }

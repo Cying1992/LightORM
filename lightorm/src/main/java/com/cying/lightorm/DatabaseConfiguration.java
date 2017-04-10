@@ -7,24 +7,37 @@ import android.text.TextUtils;
 
 /**
  * Created by Cying on 17/3/30.
+ * 配置数据库，如数据库升级、版本号、名称等信息
  */
 public class DatabaseConfiguration {
 
-    public interface DatabaseGradeListener {
+    public interface OnGradeChangedListener {
         void onGradeChanged(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion);
     }
 
-    private static final DatabaseGradeListener EMPTY_GRADE_LISTENER = new DatabaseGradeListener() {
+    public interface OnCreatedListener {
+        void onCreated(String databaseName);
+    }
+
+    private static final OnGradeChangedListener EMPTY_GRADE_LISTENER = new OnGradeChangedListener() {
         @Override
         public void onGradeChanged(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {
 
         }
     };
 
+    private static final OnCreatedListener EMPTY_DATABASE_CREATED_LISTENER = new OnCreatedListener() {
+        @Override
+        public void onCreated(String databaseName) {
+
+        }
+    };
+
     private String databaseName;
     private int databaseVersion;
-    private DatabaseGradeListener downGradeListener;
-    private DatabaseGradeListener upGradeListener;
+    private OnGradeChangedListener downgradeListener;
+    private OnGradeChangedListener upgradeListener;
+    private OnCreatedListener databaseCreatedListener;
 
     /**
      * 数据库名称
@@ -43,12 +56,17 @@ public class DatabaseConfiguration {
         }
     }
 
-    DatabaseGradeListener getDownGradeListener() {
-        return downGradeListener == null ? EMPTY_GRADE_LISTENER : downGradeListener;
+    OnCreatedListener getDatabaseCreatedListener() {
+        return databaseCreatedListener == null ? EMPTY_DATABASE_CREATED_LISTENER : databaseCreatedListener;
     }
 
-    DatabaseGradeListener getUpGradeListener() {
-        return upGradeListener == null ? EMPTY_GRADE_LISTENER : upGradeListener;
+
+    OnGradeChangedListener getDowngradeListener() {
+        return downgradeListener == null ? EMPTY_GRADE_LISTENER : downgradeListener;
+    }
+
+    OnGradeChangedListener getUpgradeListener() {
+        return upgradeListener == null ? EMPTY_GRADE_LISTENER : upgradeListener;
     }
 
     String getDatabaseName() {
@@ -63,18 +81,27 @@ public class DatabaseConfiguration {
     /**
      * 设置数据库降级回调函数
      *
-     * @param downGradeListener 降级回调函数
+     * @param downgradeListener 降级回调函数
      */
-    public void setDownGradeListener(DatabaseGradeListener downGradeListener) {
-        this.downGradeListener = downGradeListener;
+    public void setOnDowngradeListener(OnGradeChangedListener downgradeListener) {
+        this.downgradeListener = downgradeListener;
     }
 
     /**
      * 设置数据库升级回调函数
      *
-     * @param upGradeListener 升级回调函数
+     * @param upgradeListener 升级回调函数
      */
-    public void setUpGradeListener(DatabaseGradeListener upGradeListener) {
-        this.upGradeListener = upGradeListener;
+    public void setOnUpgradeListener(OnGradeChangedListener upgradeListener) {
+        this.upgradeListener = upgradeListener;
+    }
+
+    /**
+     * 设置数据库创建后的回调
+     *
+     * @param listener
+     */
+    public void setOnCreatedListener(OnCreatedListener listener) {
+        this.databaseCreatedListener = listener;
     }
 }

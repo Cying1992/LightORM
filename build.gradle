@@ -19,7 +19,7 @@ allprojects {
     repositories {
         jcenter()
         maven { url properties.getProperty('sdk.dir') + '/extras/android/m2repository' }
-        //maven { url 'https://jitpack.io' }
+        maven { url 'https://jitpack.io' }
     }
 }
 
@@ -29,11 +29,11 @@ task clean(type: Delete) {
 
 ext {
     robolectricVersion = '3.3'
-    lightormVersion = '0.0.5'
+    lightormVersion = '0.0.6-SNAPSHORT'
 }
 
 subprojects { project ->
-    if (!project.name.equals("sample")) {
+    if (!project.name.equals("sample") && !project.name.equals("sample-library")) {
         apply plugin: 'java'
         apply plugin: 'maven'
         version = VERSION_NAME

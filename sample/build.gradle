@@ -19,6 +19,12 @@ android {
     }
 }
 
+/*repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}*/
+
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
@@ -29,7 +35,7 @@ dependencies {
 
     //compile "com.github.Cying1992.LightORM:lightorm:$rootProject.ext.lightormVersion"
     //annotationProcessor "com.github.Cying1992.LightORM:lightorm-compiler:$rootProject.ext.lightormVersion"
-
+    //compile project(':sample-library')
     compile project(':lightorm')
     annotationProcessor project(':lightorm-compiler')
 

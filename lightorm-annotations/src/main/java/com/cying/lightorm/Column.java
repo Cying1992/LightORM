@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
  * 支持{@code int},{@code short},{@code byte},{@code long},{@code float},{@code double},{@code boolean}
  * 这几种基本类型及它们的包装类型，还支持{@code String},{@code byte[]},{@link java.util.Date}三种类型
  */
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.CLASS)
 @Target(ElementType.FIELD)
 public @interface Column {
 

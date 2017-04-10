@@ -76,8 +76,10 @@ public class LightORMProcessor extends AbstractProcessor {
         return SourceVersion.latestSupported();
     }
 
+
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        //messager.printMessage(NOTE, "开始生成", null);
 
         //这个方法可能会进行多次，需要判断是否已经成功生成了代码
         if (isGenerated) {
@@ -92,6 +94,7 @@ public class LightORMProcessor extends AbstractProcessor {
                 error(tableClass.getEntityElement(), "发生异常: " + e.getMessage());
             }
         }
+
 
         try {
             generateDaoCollectionsClass(tableClassList);
@@ -136,6 +139,7 @@ public class LightORMProcessor extends AbstractProcessor {
         for (Element normalElement : tableClassSet) {
             TypeElement element = (TypeElement) normalElement;
             tableClass = new TableClass(element);
+            //messager.printMessage(NOTE, "类名 : " + element.getQualifiedName().toString(), null);
             if (!tableClass.hasPrimaryKey()) {
                 error(element, "Table '%s' don't have the primary key", tableClass.getTableName());
                 return tableClassList;

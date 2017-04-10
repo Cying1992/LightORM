@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -36,7 +37,13 @@ public final class LightORM {
     static void debug(String message) {
         if (DEBUG) {
             Log.i(TAG, message);
+            printLog(message);
         }
+    }
+
+    @VisibleForTesting
+    private static void printLog(String message) {
+        System.out.println(message);
     }
 
     /**
@@ -122,6 +129,12 @@ public final class LightORM {
         databaseConfigurationMap.clear();
     }
 
+    @VisibleForTesting
+    Database findDatabase(String databaseName) {
+        return databaseMap.get(databaseName);
+    }
+
+
     @NonNull
     public String getDefaultDatabaseName() {
         return defaultDatabaseName;
@@ -136,6 +149,12 @@ public final class LightORM {
     public SQLiteDatabase openDatabase(@NonNull String databaseName) {
         databaseName = TextUtils.isEmpty(databaseName) ? defaultDatabaseName : databaseName;
         return databaseMap.get(databaseName).open();
+    }
+
+    @Nullable
+    SQLiteDatabase getOpenedDatabase(@NonNull String databaseName) {
+        databaseName = TextUtils.isEmpty(databaseName) ? defaultDatabaseName : databaseName;
+        return databaseMap.get(databaseName).get();
     }
 
     /**

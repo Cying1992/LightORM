@@ -15,10 +15,12 @@ public class Query<T> {
     final TableQuery<T> query;
 
     final BaseDao<T> dao;
+    final BaseDao.MetaData metaData;
 
     Query(BaseDao<T> dao) {
         this.dao = dao;
         this.query = new TableQuery<>(dao);
+        metaData = dao.getMetaData();
     }
 
     public Query<T> beginGroup() {
@@ -39,7 +41,7 @@ public class Query<T> {
 
     private void checkColumn(String columnName, BaseDao.FieldType... types) {
         if (!dao.isColumnValid(columnName, types)) {
-            throw new IllegalArgumentException("列名不存在或列类型不正确");
+            throw new IllegalArgumentException("数据库'" + metaData.getRealDatabaseName() + "'的表'" + metaData.getTableName() + "'不存在列'" + columnName + "'或该列数据类型不匹配");
         }
     }
 
