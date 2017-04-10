@@ -29,5 +29,5 @@ task clean(type: Delete) {
 
 ext {
     robolectricVersion = '3.3'
-    lightormVersion = '0.0.1'
+    lightormVersion = '0.0.3'
 }

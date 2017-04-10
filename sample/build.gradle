@@ -27,8 +27,8 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.3.1'
     testCompile 'junit:junit:4.12'
 
-    //compile "com.github.Cying1992:lightorm:$rootProject.ext.lightormVersion"
-    //annotationProcessor "com.github.Cying1992:lightorm-compiler:$rootProject.ext.lightormVersion"
+    //compile "com.github.Cying1992.LightORM:lightorm:$rootProject.ext.lightormVersion"
+    //annotationProcessor "com.github.Cying1992.LightORM:lightorm-compiler:$rootProject.ext.lightormVersion"
 
     compile project(':lightorm')
     annotationProcessor project(':lightorm-compiler')
