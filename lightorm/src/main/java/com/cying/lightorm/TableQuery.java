@@ -344,6 +344,14 @@ class TableQuery<T> {
         return sort.into(this).findAll();
     }
 
+    List<T> findAll(String sql, String... selectionArgs) {
+        Cursor cursor = openDatabase().rawQuery(sql, selectionArgs);
+        List<T> list = dao.cursorToEntityList(cursor);
+        closeDatabase();
+        return list;
+    }
+
+
     T findOne() {
         List<T> list = findAll();
         return list.isEmpty() ? null : list.get(0);

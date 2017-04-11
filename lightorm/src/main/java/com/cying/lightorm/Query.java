@@ -8,6 +8,7 @@ import java.util.List;
 
 /**
  * Created by Cying on 17/3/30.
+ *
  * @see LightORM#where(Class)
  */
 public class Query<T> {
@@ -528,6 +529,10 @@ public class Query<T> {
         return query.findAll(sort);
     }
 
+    @NonNull
+    public List<T> findAll(String sql, String... selectionArgs) {
+        return query.findAll(sql, selectionArgs);
+    }
 
     @Nullable
     public T findFirst() {

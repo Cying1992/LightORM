@@ -295,6 +295,19 @@ public final class LightORM {
     }
 
     /**
+     * 执行sql语句,执行后会自动关闭数据库连接
+     *
+     * @param databaseName
+     * @param sql
+     * @param args
+     */
+    public void execSQL(String databaseName, String sql, Object... args) {
+        SQLiteDatabase sqLiteDatabase = openDatabase(databaseName);
+        sqLiteDatabase.execSQL(sql, args);
+        closeDatabase(databaseName);
+    }
+
+    /**
      * 查询
      *
      * @param entityClass
