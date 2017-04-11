@@ -1,6 +1,7 @@
 package com.cying.lightorm;
 
 import android.app.Activity;
+import android.support.annotation.NonNull;
 
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -32,7 +33,9 @@ public class QueryTest {
 
     static {
         DatabaseConfiguration config = new DatabaseConfiguration(databaseName, 1);
+        long current = System.currentTimeMillis();
         LightORM.init(Robolectric.setupActivity(Activity.class), config);
+        System.out.println("cost time : " + (System.currentTimeMillis() - current));
         LightORM.setDebug(true);
         orm = LightORM.getInstance();
         dao = orm.getDao(Entity.class);
@@ -46,6 +49,7 @@ public class QueryTest {
         query.reset();
         orm.closeDatabase();
     }
+
 
     private void testDatabaseClosed() {
         assertThat(database.isOpen(), is(false));
@@ -61,10 +65,15 @@ public class QueryTest {
         assertThat(entity.id, is(1L));
         entity.string = "changed";
         assertThat(orm.save(entity), is(1L));
+        assertThat(query.count(), is(1L));
         assertThat(query.findFirst().string, is("changed"));
         entity.id = 8L;
         assertThat(orm.save(entity), is(8L));
-        assertThat(query.count(), is(2L));
+        Entity first = query.findFirst();
+        assertThat(first.string, is("changed"));
+        assertThat(first.id, is(8L));
+        //因为在string上有unique约束，所以未插入新数据
+        assertThat(query.count(), is(1L));
         testDatabaseClosed();
     }
 
@@ -193,14 +202,17 @@ public class QueryTest {
     @Test
     public void nullOrEmpty() {
         Entity entity = new Entity();
-        orm.save(entity);
-        assertThat(query.isNull("string").count(), is(1L));
-        assertThat(query.isEmpty("string").count(), is(1L));
-        entity.string = "string";
+        entity.string = "";
         orm.save(entity);
         assertThat(query.isNull("string").count(), is(0L));
-        assertThat(query.isEmpty("string").count(), is(0L));
-        assertThat(query.isNotNull("string").count(), is(1L));
+        assertThat(query.isEmpty("string").count(), is(1L));
+        entity.id = null;
+        entity.string = "string";
+        orm.save(entity);
+        assertThat(query.count(), is(2L));
+        assertThat(query.isNull("string").count(), is(0L));
+        assertThat(query.isEmpty("string").count(), is(1L));
+        assertThat(query.isNotNull("string").count(), is(2L));
         assertThat(query.isNotEmpty("string").count(), is(1L));
         testDatabaseClosed();
     }
@@ -231,4 +243,56 @@ public class QueryTest {
         orm.openDatabase();
         assertThat(database.getOpenCount(), is(1));
     }
+
+    void removeQueryPostProcessor(EntityProcessor<Entity> interceptor) {
+        if (dao.mQueryPostprocessorSet != null) {
+            dao.mQueryPostprocessorSet.remove(interceptor);
+        }
+    }
+
+    void removeSavePreProcessor(EntityProcessor<Entity> interceptor) {
+        if (dao.mSavePreprocessorSet != null) {
+            dao.mSavePreprocessorSet.remove(interceptor);
+        }
+    }
+
+    @Test
+    public void testEntityProcessor() {
+        EntityProcessor<Entity> preprocessor = new EntityProcessor<Entity>() {
+            @NonNull
+            @Override
+            public void process(@NonNull Entity entity) {
+                entity.string = "hehe";
+                entity.id = 21L;
+            }
+        };
+
+        dao.addSavePreprocessor(preprocessor);
+        Entity entity = new Entity();
+        entity.id = 10L;
+        entity.string = "kk";
+        orm.save(entity);
+        assertThat(entity.string, is("hehe"));
+        assertThat(entity.id, is(10L));
+        Entity first = query.findFirst();
+        assertThat(first.string, is("hehe"));
+        assertThat(first.id, is(10L));
+
+        removeSavePreProcessor(preprocessor);
+        EntityProcessor<Entity> postprocessor = new EntityProcessor<Entity>() {
+            @NonNull
+            @Override
+            public void process(@NonNull Entity entity) {
+                entity.bigInt = 101;
+                entity.id = 19L;
+            }
+        };
+        dao.addQueryPostprocessor(postprocessor);
+        first = query.findFirst();
+        assertThat(first.bigInt, is(101));
+        assertThat(first.id, is(10L));
+        removeQueryPostProcessor(postprocessor);
+
+    }
+
 }

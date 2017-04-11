@@ -256,7 +256,7 @@ class TableClass {
         MethodSpec.Builder createMetaDataMethod = MethodSpec
                 .methodBuilder(METHOD_GET_METADATA)
                 .addAnnotation(Override.class)
-                .addModifiers(Modifier.PUBLIC)
+                .addModifiers(Modifier.PROTECTED)
                 .returns(BaseDao.MetaData.class)
                 .addStatement("return $L", FIELD_META_DATA);
 

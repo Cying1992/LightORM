@@ -3,7 +3,6 @@ package com.cying.lightorm;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.support.annotation.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,7 +13,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Created by Cying on 17/3/30.
  */
-@VisibleForTesting
 class Database {
 
     final String databaseName;
@@ -88,12 +86,10 @@ class Database {
         }
     }
 
-    @VisibleForTesting
     boolean isOpen() {
         return db != null && db.isOpen();
     }
 
-    @VisibleForTesting
     int getOpenCount() {
         return count.get();
     }

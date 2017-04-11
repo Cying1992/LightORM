@@ -51,17 +51,28 @@ public abstract class BaseDao<T> {
     private MetaData mMetaData;
 
     private Map<String, FieldType> mFieldTypes;
-    private Set<EntityInterceptor<T>> mEntityInterceptors;
+
+    Set<EntityProcessor<T>> mQueryPostprocessorSet;
+
+    Set<EntityProcessor<T>> mSavePreprocessorSet;
 
     protected BaseDao() {
         mMetaData = getMetaData();
     }
 
-    void addEntityInterceptor(EntityInterceptor<T> interceptor) {
-        if (mEntityInterceptors == null) {
-            mEntityInterceptors = new HashSet<>();
+    void addQueryPostprocessor(EntityProcessor<T> interceptor) {
+        if (mQueryPostprocessorSet == null) {
+            mQueryPostprocessorSet = new HashSet<>();
         }
-        mEntityInterceptors.add(interceptor);
+        mQueryPostprocessorSet.add(interceptor);
+    }
+
+
+    void addSavePreprocessor(EntityProcessor<T> interceptor) {
+        if (mSavePreprocessorSet == null) {
+            mSavePreprocessorSet = new HashSet<>();
+        }
+        mSavePreprocessorSet.add(interceptor);
     }
 
     FieldType getFieldType(String columnName) {
@@ -142,7 +153,7 @@ public abstract class BaseDao<T> {
         return cursor.getFloat(getColumnIndex(cursor, columnName));
     }
 
-    public abstract MetaData getMetaData();
+    protected abstract MetaData getMetaData();
 
     protected abstract Long getIdentity(T entity);
 
@@ -177,10 +188,13 @@ public abstract class BaseDao<T> {
             List<T> result = new ArrayList<>();
             while (cursor.moveToNext()) {
                 entity = cursorToEntity(cursor);
-                if (mEntityInterceptors != null) {
-                    for (EntityInterceptor<T> interceptor : mEntityInterceptors) {
-                        entity = interceptor.process(entity);
+                if (mQueryPostprocessorSet != null && !mQueryPostprocessorSet.isEmpty()) {
+                    Long id = getIdentity(entity);
+                    for (EntityProcessor<T> postprocessor : mQueryPostprocessorSet) {
+                        postprocessor.process(entity);
                     }
+                    //防止实体的主键被更改
+                    setIdentity(entity, id);
                 }
                 result.add(entity);
             }
@@ -202,13 +216,20 @@ public abstract class BaseDao<T> {
      */
     Long save(T entity) {
         if (entity == null) return null;
-        ContentValues values = entityToValues(entity);
+
         Long entityId = getIdentity(entity);
-        long id;
+        if (mSavePreprocessorSet != null && !mSavePreprocessorSet.isEmpty()) {
+            for (EntityProcessor<T> preprocessor : mSavePreprocessorSet) {
+                preprocessor.process(entity);
+            }
+            //防止实体的主键被更改
+            setIdentity(entity, entityId);
+        }
+        ContentValues values = entityToValues(entity);
         if (entityId != null && entityId < 1) {
             values.putNull(mMetaData.primaryKey);
         }
-        id = openDatabase().insertWithOnConflict(mMetaData.tableName, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+        long id = openDatabase().insertWithOnConflict(mMetaData.tableName, null, values, SQLiteDatabase.CONFLICT_REPLACE);
         setIdentity(entity, id);
         closeDatabase();
         return id;
@@ -226,6 +247,13 @@ public abstract class BaseDao<T> {
                 entity = entities.next();
                 if (entity != null) {
                     entityId = getIdentity(entity);
+                    if (mSavePreprocessorSet != null && !mSavePreprocessorSet.isEmpty()) {
+                        for (EntityProcessor<T> preprocessor : mSavePreprocessorSet) {
+                            preprocessor.process(entity);
+                        }
+                        //防止实体的主键被更改
+                        setIdentity(entity, entityId);
+                    }
                     values = entityToValues(entity);
                     if (entityId != null && entityId < 1) {
                         values.putNull(mMetaData.primaryKey);

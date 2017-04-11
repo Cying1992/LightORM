@@ -19,6 +19,5 @@ public class Entity {
     String name;
 
     void m() {
-
     }
 }

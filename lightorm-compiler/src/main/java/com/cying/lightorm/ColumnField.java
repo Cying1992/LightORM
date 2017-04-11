@@ -5,7 +5,6 @@ import javax.lang.model.element.VariableElement;
 
 /**
  * Created by Cying on 17/3/29.
-
  */
 class ColumnField {
 
@@ -34,6 +33,9 @@ class ColumnField {
         if (columnType == null) {
             LightORMProcessor.error(fieldElement, "不支持这个类型");
         } else {
+            if (columnType == ColumnType.BOOLEAN && columnUnique) {
+                LightORMProcessor.error(fieldElement, "不能在Boolean类型上使用unique约束");
+            }
             prepareColumnSQL();
         }
     }

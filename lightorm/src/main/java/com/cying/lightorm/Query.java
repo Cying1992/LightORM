@@ -8,6 +8,7 @@ import java.util.List;
 
 /**
  * Created by Cying on 17/3/30.
+ * @see LightORM#where(Class)
  */
 public class Query<T> {
 

@@ -10,7 +10,7 @@ public class Entity {
     @Key
     Long id;
 
-    @Column
+    @Column(unique = true, notNull = true)
     String string;
 
     @Column
@@ -43,7 +43,7 @@ public class Entity {
     @Column
     byte[] byteArray;
 
-    @Column(unique = false)
+    @Column
     boolean smallBoolean;
 
     @Column

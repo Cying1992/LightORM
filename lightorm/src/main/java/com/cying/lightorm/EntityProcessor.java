@@ -7,8 +7,8 @@ import android.support.annotation.NonNull;
  * <p>
  * 在查询到数据并转换成实体后可实体进行处理的接口
  */
-public interface EntityInterceptor<T> {
+public interface EntityProcessor<T> {
 
     @NonNull
-    T process(@NonNull T entity);
+    void process(@NonNull T entity);
 }

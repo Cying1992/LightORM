@@ -37,13 +37,8 @@ public final class LightORM {
     static void debug(String message) {
         if (DEBUG) {
             Log.i(TAG, message);
-            printLog(message);
+            System.out.println(message);
         }
-    }
-
-    @VisibleForTesting
-    private static void printLog(String message) {
-        System.out.println(message);
     }
 
     /**
@@ -213,7 +208,7 @@ public final class LightORM {
 
 
     /**
-     * 保存实体到数据库
+     * 保存实体到数据库,保存成功后会给{@code entity}设置主键字段值
      *
      * @param entity 要保存的实体
      * @param <T>    实体类型
@@ -249,7 +244,8 @@ public final class LightORM {
      *
      * @param query
      * @param <T>
-     * @return
+     * @return 删除的数量
+     * @see #where(Class)
      */
     public <T> int deleteAll(@NonNull Query<T> query) {
         TableQuery<T> tableQuery = query.query;
@@ -275,15 +271,27 @@ public final class LightORM {
 
 
     /**
-     * 添加实体类后处理器，即从数据库查询到实体后可对实体进行处理
+     * 添加查询后处理器，即从数据库查询到实体后可对实体进行处理，如进行数据转换
      *
      * @param entityClass 数据库实体类
-     * @param interceptor 实体后处理器
+     * @param processor   查询后处理器
      * @param <T>         实体类型
      */
-    public <T> void addEntityInterceptor(@NonNull Class<T> entityClass, @NonNull EntityInterceptor<T> interceptor) {
+    public <T> void addQueryPostprocessor(@NonNull Class<T> entityClass, @NonNull EntityProcessor<T> processor) {
         BaseDao<T> baseDao = getDao(entityClass);
-        baseDao.addEntityInterceptor(interceptor);
+        baseDao.addQueryPostprocessor(processor);
+    }
+
+    /**
+     * 添加保存预处理器，即保存到数据库前对实体进行处理,如在保存前对为null的字段设置默认值
+     *
+     * @param entityClass 数据库实体类
+     * @param processor   保存预处理器
+     * @param <T>         实体类型
+     */
+    public <T> void addSavePreprocessor(@NonNull Class<T> entityClass, @NonNull EntityProcessor<T> processor) {
+        BaseDao<T> baseDao = getDao(entityClass);
+        baseDao.addSavePreprocessor(processor);
     }
 
     /**
