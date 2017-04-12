@@ -99,9 +99,23 @@ public class Update<T> {
         if (this.tableQuery != null) {
             throw new IllegalArgumentException("只能调用一次where");
         }
+        query.checkValid();
         TableQuery<T> tableQuery = query.query;
-        tableQuery.checkEndGroup();
         this.tableQuery = tableQuery;
+        return this;
+    }
+
+    /**
+     * 设置查询条件
+     *
+     * @param condition
+     * @return
+     */
+    public Update<T> where(@NonNull Condition<T> condition) {
+        Query<T> query = new Query<>(dao);
+        this.tableQuery = query.query;
+        condition.where(query);
+        query.checkValid();
         return this;
     }
 

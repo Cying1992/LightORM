@@ -248,13 +248,31 @@ public final class LightORM {
      * @see #where(Class)
      */
     public <T> int deleteAll(@NonNull Query<T> query) {
+        query.checkValid();
         TableQuery<T> tableQuery = query.query;
-        tableQuery.checkEndGroup();
         int count = query.dao.deleteAll(tableQuery.getSelection(), tableQuery.getSelectionArgs());
         query.reset();
         return count;
     }
 
+    /**
+     * 根据条件删除
+     *
+     * @param entityClass
+     * @param condition
+     * @param <T>
+     * @return 删除的数量
+     */
+    public <T> int deleteAll(@NonNull Class<T> entityClass, @NonNull Condition<T> condition) {
+        BaseDao<T> dao = getDao(entityClass);
+        Query<T> query = new Query<>(dao);
+        condition.where(query);
+        query.checkValid();
+        TableQuery<T> tableQuery = query.query;
+        int count = dao.deleteAll(tableQuery.getSelection(), tableQuery.getSelectionArgs());
+        query.reset();
+        return count;
+    }
 
     /**
      * 删除保存在数据库的实体

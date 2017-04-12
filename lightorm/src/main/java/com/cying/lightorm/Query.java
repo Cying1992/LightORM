@@ -9,6 +9,7 @@ import java.util.List;
 /**
  * Created by Cying on 17/3/30.
  * 查询条件，在执行后会自动清除所有查询条件
+ *
  * @see LightORM#where(Class)
  */
 public class Query<T> {
@@ -40,6 +41,9 @@ public class Query<T> {
         return this;
     }
 
+    void checkValid() {
+        query.checkEndGroup();
+    }
 
     private void checkAndAddDelimiter(String columnName, BaseDao.FieldType... types) {
         dao.checkColumn(columnName, types);
