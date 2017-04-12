@@ -101,13 +101,21 @@ public class Sort {
         return this;
     }
 
-    public Sort groupBy(@NonNull String columnName) {
+    public Sort groupBy(@NonNull String columnName, String... otherColumns) {
         if (groupBySet == null) {
             groupBySet = new LinkedHashSet<>();
         } else if (groupBySet.contains(columnName)) {
             throw new IllegalArgumentException("已经存在列" + columnName + "的group by");
         }
         groupBySet.add(columnName);
+        if (otherColumns != null) {
+            for (String otherColumn : otherColumns) {
+                if (groupBySet.contains(otherColumn)) {
+                    throw new IllegalArgumentException("已经存在列" + otherColumn + "的group by");
+                }
+                groupBySet.add(otherColumn);
+            }
+        }
         return this;
     }
 
