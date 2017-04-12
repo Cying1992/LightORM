@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  * Created by Cying on 17/3/30.
- *
+ * 查询条件，在执行后会自动清除所有查询条件
  * @see LightORM#where(Class)
  */
 public class Query<T> {
@@ -41,14 +41,8 @@ public class Query<T> {
     }
 
 
-    private void checkColumn(String columnName, BaseDao.FieldType... types) {
-        if (!dao.isColumnValid(columnName, types)) {
-            throw new IllegalArgumentException("数据库'" + metaData.getRealDatabaseName() + "'的表'" + metaData.getTableName() + "'不存在列'" + columnName + "'或该列数据类型不匹配");
-        }
-    }
-
     private void checkAndAddDelimiter(String columnName, BaseDao.FieldType... types) {
-        checkColumn(columnName, types);
+        dao.checkColumn(columnName, types);
         query.addDelimiter();
     }
 
@@ -441,7 +435,7 @@ public class Query<T> {
 
     @Nullable
     public Date minDate(@NonNull String columnName) {
-        checkColumn(columnName, BaseDao.FieldType.DATE);
+        dao.checkColumn(columnName, BaseDao.FieldType.DATE);
         return query.funQueryDate(TableQuery.FUNCTION_MIN, columnName);
     }
 
@@ -464,7 +458,7 @@ public class Query<T> {
 
     @Nullable
     public Date maxDate(@NonNull String columnName) {
-        checkColumn(columnName, BaseDao.FieldType.DATE);
+        dao.checkColumn(columnName, BaseDao.FieldType.DATE);
         return query.funQueryDate(TableQuery.FUNCTION_MAX, columnName);
     }
 

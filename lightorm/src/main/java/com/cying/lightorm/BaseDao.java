@@ -82,6 +82,12 @@ public abstract class BaseDao<T> {
         return mFieldTypes.get(columnName);
     }
 
+    void checkColumn(String columnName, BaseDao.FieldType... types) {
+        if (!isColumnValid(columnName, types)) {
+            throw new IllegalArgumentException("数据库'" + mMetaData.getRealDatabaseName() + "'的表'" + mMetaData.getTableName() + "'不存在列'" + columnName + "'或该列数据类型不匹配");
+        }
+    }
+
     /**
      * 检查列的数据类型是否一致
      *

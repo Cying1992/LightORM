@@ -14,6 +14,7 @@ import org.robolectric.annotation.Config;
 import java.util.Date;
 
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
@@ -30,6 +31,7 @@ public class QueryTest {
     static final Query<Entity> query;
     static final String databaseName = "test_database";
     static final Database database;
+    static final Update<Entity> update;
 
     static {
         DatabaseConfiguration config = new DatabaseConfiguration(databaseName, 1);
@@ -41,12 +43,14 @@ public class QueryTest {
         dao = orm.getDao(Entity.class);
         query = orm.where(Entity.class);
         database = orm.findDatabase(databaseName);
+        update = orm.beginUpdate(Entity.class);
     }
 
     @After
     public void tearDown() {
         orm.deleteAll(Entity.class);
         query.reset();
+        update.reset();
         orm.closeDatabase();
     }
 
@@ -223,6 +227,17 @@ public class QueryTest {
 
         assertThat(query.findAll(Sort.create().distinct(true).limit(1).groupBy("string").orderBy(true, "string", "smallInt").orderBy(false, "bigInt", "bigLong").having("smallDouble>0")), is(Matchers.<Entity>empty()));
         testDatabaseClosed();
+    }
+
+    @Test
+    public void testUpdate() {
+        saveEntity();
+        assertThat(query.equalTo("string", "string").count(), is(1L));
+        update.set("string", "100").where(query.equalTo("string", "100")).execute();
+        assertThat(query.findFirst().string, is(not("100")));
+        update.set("string", "121").set("smallBoolean", true).where(query.equalTo("string", "string")).execute();
+        assertThat(query.findFirst().string, is("121"));
+        assertThat(query.findFirst().smallBoolean, is(true));
     }
 
     @Test

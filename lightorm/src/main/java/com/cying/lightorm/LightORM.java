@@ -269,6 +269,16 @@ public final class LightORM {
         return baseDao.delete(entity);
     }
 
+    /**
+     * 更新对应数据表
+     *
+     * @param entityClass 要更新的数据库表对应的实体类
+     * @param <T>         实体类类型
+     * @return
+     */
+    public <T> Update<T> beginUpdate(Class<T> entityClass) {
+        return new Update<>(getDao(entityClass));
+    }
 
     /**
      * 添加查询后处理器，即从数据库查询到实体后可对实体进行处理，如进行数据转换
