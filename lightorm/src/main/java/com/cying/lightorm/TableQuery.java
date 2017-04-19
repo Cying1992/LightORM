@@ -196,7 +196,7 @@ class TableQuery<T> {
     }
 
     TableQuery<T> greaterOrEqual(String columnName, Date value) {
-        return greaterThan(columnName, value.getTime());
+        return greaterOrEqual(columnName, value.getTime());
     }
 
     TableQuery<T> lessThan(String columnName, Number value) {
@@ -206,7 +206,7 @@ class TableQuery<T> {
     }
 
     TableQuery<T> lessThan(String columnName, Date value) {
-        return greaterThan(columnName, value.getTime());
+        return lessThan(columnName, value.getTime());
     }
 
     TableQuery<T> lessOrEqual(String columnName, Number value) {
@@ -216,7 +216,7 @@ class TableQuery<T> {
     }
 
     TableQuery<T> lessOrEqual(String columnName, Date value) {
-        return greaterThan(columnName, value.getTime());
+        return lessOrEqual(columnName, value.getTime());
     }
 
 

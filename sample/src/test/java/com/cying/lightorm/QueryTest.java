@@ -259,6 +259,11 @@ public class QueryTest {
         assertThat(database.getOpenCount(), is(1));
     }
 
+    @Test
+    public void testCondition() {
+        saveEntity();
+    }
+
     void removeQueryPostProcessor(EntityProcessor<Entity> interceptor) {
         if (dao.mQueryPostprocessorSet != null) {
             dao.mQueryPostprocessorSet.remove(interceptor);
@@ -269,6 +274,41 @@ public class QueryTest {
         if (dao.mSavePreprocessorSet != null) {
             dao.mSavePreprocessorSet.remove(interceptor);
         }
+    }
+
+    @Test
+    public void testNumber() {
+        Date now = new Date();
+        Date savedDate = new Date(now.getTime() - 1L);
+        saveEntity(savedDate);
+
+        assertThat(query.lessThan("smallInt", 89).exists(), is(false));
+        assertThat(query.lessThan("smallInt", 91).exists(), is(true));
+        assertThat(query.lessThan("smallInt", 90).exists(), is(false));
+        assertThat(query.lessThan("date", now).exists(), is(true));
+        assertThat(query.lessThan("date", savedDate).exists(), is(false));
+
+        assertThat(query.lessOrEqual("smallInt", 89).exists(), is(false));
+        assertThat(query.lessOrEqual("smallInt", 90).exists(), is(true));
+        assertThat(query.lessOrEqual("smallInt", 91).exists(), is(true));
+        assertThat(query.lessOrEqual("date", now).exists(), is(true));
+        assertThat(query.lessOrEqual("date", savedDate).exists(), is(true));
+
+        assertThat(query.greaterThan("smallInt", 89).exists(), is(true));
+        assertThat(query.greaterThan("smallInt", 90).exists(), is(false));
+        assertThat(query.greaterThan("smallInt", 91).exists(), is(false));
+        assertThat(query.greaterThan("date", now).exists(), is(false));
+        assertThat(query.greaterThan("date", savedDate).exists(), is(false));
+        assertThat(query.greaterThan("date", new Date(now.getTime() - 2L)).exists(), is(true));
+
+        assertThat(query.greaterOrEqual("smallInt", 89).exists(), is(true));
+        assertThat(query.greaterOrEqual("smallInt", 90).exists(), is(true));
+        assertThat(query.greaterOrEqual("smallInt", 91).exists(), is(false));
+        assertThat(query.greaterOrEqual("date", now).exists(), is(false));
+        assertThat(query.greaterOrEqual("date", savedDate).exists(), is(true));
+        assertThat(query.greaterOrEqual("date", new Date(now.getTime() - 2L)).exists(), is(true));
+
+
     }
 
     @Test

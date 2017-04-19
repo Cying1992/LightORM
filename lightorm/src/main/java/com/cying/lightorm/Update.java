@@ -89,6 +89,12 @@ public class Update<T> {
         return this;
     }
 
+    public Update<T> set(@NonNull String columnName, byte[] value) {
+        dao.checkColumn(columnName, BaseDao.FieldType.BINARY);
+        putColumnValue(columnName, value);
+        return this;
+    }
+
     /**
      * 设置查询条件
      *
@@ -100,8 +106,7 @@ public class Update<T> {
             throw new IllegalArgumentException("只能调用一次where");
         }
         query.checkValid();
-        TableQuery<T> tableQuery = query.query;
-        this.tableQuery = tableQuery;
+        this.tableQuery = query.query;
         return this;
     }
 
@@ -112,6 +117,9 @@ public class Update<T> {
      * @return
      */
     public Update<T> where(@NonNull Condition<T> condition) {
+        if (this.tableQuery != null) {
+            throw new IllegalArgumentException("只能调用一次where");
+        }
         Query<T> query = new Query<>(dao);
         this.tableQuery = query.query;
         condition.where(query);
