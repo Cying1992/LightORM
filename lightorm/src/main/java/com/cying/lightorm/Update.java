@@ -38,13 +38,13 @@ public class Update<T> {
     }
 
     private Update<T> putColumnLongValue(String columnName, Number value) {
-        dao.checkColumn(columnName, BaseDao.FieldType.INTEGER);
+        dao.checkFieldType(columnName, BaseDao.FieldType.INTEGER);
         putColumnValue(columnName, value);
         return this;
     }
 
     public Update<T> set(@NonNull String columnName, Boolean value) {
-        dao.checkColumn(columnName, BaseDao.FieldType.BOOLEAN);
+        dao.checkFieldType(columnName, BaseDao.FieldType.BOOLEAN);
         putColumnValue(columnName, value == null ? null : (value ? 1 : 0));
         return this;
     }
@@ -66,31 +66,31 @@ public class Update<T> {
     }
 
     public Update<T> set(@NonNull String columnName, Date value) {
-        dao.checkColumn(columnName, BaseDao.FieldType.DATE);
+        dao.checkFieldType(columnName, BaseDao.FieldType.DATE);
         putColumnValue(columnName, value == null ? null : value.getTime());
         return this;
     }
 
     public Update<T> set(@NonNull String columnName, String value) {
-        dao.checkColumn(columnName, BaseDao.FieldType.STRING);
+        dao.checkFieldType(columnName, BaseDao.FieldType.STRING);
         putColumnValue(columnName, value);
         return this;
     }
 
     public Update<T> set(@NonNull String columnName, Double value) {
-        dao.checkColumn(columnName, BaseDao.FieldType.DOUBLE);
+        dao.checkFieldType(columnName, BaseDao.FieldType.DOUBLE);
         putColumnValue(columnName, value);
         return this;
     }
 
     public Update<T> set(@NonNull String columnName, Float value) {
-        dao.checkColumn(columnName, BaseDao.FieldType.DOUBLE);
+        dao.checkFieldType(columnName, BaseDao.FieldType.DOUBLE);
         putColumnValue(columnName, value);
         return this;
     }
 
     public Update<T> set(@NonNull String columnName, byte[] value) {
-        dao.checkColumn(columnName, BaseDao.FieldType.BINARY);
+        dao.checkFieldType(columnName, BaseDao.FieldType.BINARY);
         putColumnValue(columnName, value);
         return this;
     }

@@ -50,7 +50,7 @@ class TableQuery<T> {
     }
 
     void checkColumn(String columnName, BaseDao.FieldType... types) {
-        if (!dao.isColumnValid(columnName, types)) {
+        if (!dao.isFieldTypeValid(columnName, types)) {
             throw new IllegalArgumentException("数据库'" + metaData.getRealDatabaseName() + "'的表'" + metaData.getTableName() + "'不存在列'" + columnName + "'");
         }
     }
@@ -327,6 +327,49 @@ class TableQuery<T> {
         Number result = queryNumber(sqliteFunctionName, columnName, Long.class);
         return result == null ? -1 : (Long) result;
     }
+
+
+    List getColumnValues(String columnName, BaseDao.FieldType fieldType) {
+        List result = new ArrayList<>();
+        selectWhat = columnName;
+        Cursor cursor = query();
+        while (cursor.moveToNext()) {
+            switch (fieldType) {
+                case STRING:
+                    result.add(cursor.getString(0));
+                    break;
+
+                case DOUBLE:
+                    result.add(cursor.getDouble(0));
+                    break;
+
+                case FLOAT:
+                    result.add(cursor.getFloat(0));
+                    break;
+
+                case BOOLEAN:
+                    result.add(cursor.getInt(0) != 0);
+                    break;
+
+                case INTEGER:
+                    result.add(cursor.getLong(0));
+                    break;
+
+                case BINARY:
+                    result.add(cursor.getBlob(0));
+                    break;
+
+                case DATE:
+                    result.add(new Date(cursor.getLong(0)));
+                    break;
+            }
+        }
+
+        cursor.close();
+        closeDatabase();
+        return result;
+    }
+
 
     Date funQueryDate(String sqliteFunctionName, String columnName) {
         Number result = queryNumber(sqliteFunctionName, columnName, Long.class);

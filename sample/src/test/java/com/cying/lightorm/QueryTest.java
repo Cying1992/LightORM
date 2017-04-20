@@ -350,4 +350,22 @@ public class QueryTest {
 
     }
 
+    @Test
+    public void testGetColumnValues() {
+        Date date = new Date();
+        Entity entity = saveEntity(date);
+        assertThat(query.findIds().get(0), is(1L));
+        assertThat(query.isNotEmpty("string").findDoubles("smallDouble").get(0), is(89D));
+        assertThat(query.isNotEmpty("string").findStrings("string").get(0), is("string"));
+        assertThat(query.isNotEmpty("string").findFloats("smallFloat").get(0), is(23F));
+        assertThat(query.isNotEmpty("string").findDates("date").get(0), is(date));
+        assertThat(query.isNotEmpty("string").findIntegers("smallInt").get(0), is(90L));
+        assertThat(query.isNotEmpty("string").findBooleans("bigBoolean").get(0), is(true));
+
+        entity.string = "ksks";
+        entity.id = null;
+        orm.save(entity);
+        assertThat(query.findIds().size(), is(2));
+
+    }
 }

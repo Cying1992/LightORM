@@ -3,6 +3,7 @@ package com.cying.lightorm;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -46,7 +47,7 @@ public class Query<T> {
     }
 
     private void checkAndAddDelimiter(String columnName, BaseDao.FieldType... types) {
-        dao.checkColumn(columnName, types);
+        dao.checkFieldType(columnName, types);
         query.addDelimiter();
     }
 
@@ -439,7 +440,7 @@ public class Query<T> {
 
     @Nullable
     public Date minDate(@NonNull String columnName) {
-        dao.checkColumn(columnName, BaseDao.FieldType.DATE);
+        dao.checkFieldType(columnName, BaseDao.FieldType.DATE);
         return query.funQueryDate(TableQuery.FUNCTION_MIN, columnName);
     }
 
@@ -462,7 +463,7 @@ public class Query<T> {
 
     @Nullable
     public Date maxDate(@NonNull String columnName) {
-        dao.checkColumn(columnName, BaseDao.FieldType.DATE);
+        dao.checkFieldType(columnName, BaseDao.FieldType.DATE);
         return query.funQueryDate(TableQuery.FUNCTION_MAX, columnName);
     }
 
@@ -542,4 +543,50 @@ public class Query<T> {
         return query.findLast();
     }
 
+    @SuppressWarnings("unchecked")
+    public List<Long> findIds() {
+        return Collections.unmodifiableList(query.getColumnValues(metaData.getPrimaryKey(), BaseDao.FieldType.INTEGER));
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Double> findDoubles(String columnName) {
+        BaseDao.FieldType fieldType = dao.checkAndGetFieldType(columnName, BaseDao.FieldType.DOUBLE);
+        return Collections.unmodifiableList(query.getColumnValues(columnName, fieldType));
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Float> findFloats(String columnName) {
+        BaseDao.FieldType fieldType = dao.checkAndGetFieldType(columnName, BaseDao.FieldType.FLOAT);
+        return Collections.unmodifiableList(query.getColumnValues(columnName, fieldType));
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Long> findIntegers(String columnName) {
+        BaseDao.FieldType fieldType = dao.checkAndGetFieldType(columnName, BaseDao.FieldType.INTEGER);
+        return Collections.unmodifiableList(query.getColumnValues(columnName, fieldType));
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Date> findDates(String columnName) {
+        BaseDao.FieldType fieldType = dao.checkAndGetFieldType(columnName, BaseDao.FieldType.DATE);
+        return Collections.unmodifiableList(query.getColumnValues(columnName, fieldType));
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Boolean> findBooleans(String columnName) {
+        BaseDao.FieldType fieldType = dao.checkAndGetFieldType(columnName, BaseDao.FieldType.BOOLEAN);
+        return Collections.unmodifiableList(query.getColumnValues(columnName, fieldType));
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<byte[]> findBinaries(String columnName) {
+        BaseDao.FieldType fieldType = dao.checkAndGetFieldType(columnName, BaseDao.FieldType.BINARY);
+        return Collections.unmodifiableList(query.getColumnValues(columnName, fieldType));
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> findStrings(String columnName) {
+        BaseDao.FieldType fieldType = dao.checkAndGetFieldType(columnName, BaseDao.FieldType.STRING);
+        return Collections.unmodifiableList(query.getColumnValues(columnName, fieldType));
+    }
 }

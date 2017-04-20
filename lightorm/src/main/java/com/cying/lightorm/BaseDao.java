@@ -3,6 +3,7 @@ package com.cying.lightorm;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
@@ -75,17 +76,56 @@ public abstract class BaseDao<T> {
         mSavePreprocessorSet.add(interceptor);
     }
 
+    @NonNull
     FieldType getFieldType(String columnName) {
         if (mFieldTypes == null) {
             mFieldTypes = collectFieldTypes();
         }
-        return mFieldTypes.get(columnName);
+        FieldType fieldType = mFieldTypes.get(columnName);
+        if (fieldType == null) {
+            throw new IllegalArgumentException("数据库'" + mMetaData.getRealDatabaseName() + "'的表'" + mMetaData.getTableName() + "'不存在列'" + columnName);
+        }
+        return fieldType;
     }
 
-    void checkColumn(String columnName, BaseDao.FieldType... types) {
-        if (!isColumnValid(columnName, types)) {
+    void checkFieldType(String columnName, BaseDao.FieldType... types) {
+        if (!isFieldTypeValid(columnName, types)) {
             throw new IllegalArgumentException("数据库'" + mMetaData.getRealDatabaseName() + "'的表'" + mMetaData.getTableName() + "'不存在列'" + columnName + "'或该列数据类型不匹配");
         }
+    }
+
+    @NonNull
+    FieldType checkAndGetFieldType(String columnName, FieldType... fieldTypes) {
+        FieldType fieldType = getValidFieldType(columnName, fieldTypes);
+        if (fieldType == null) {
+            throw new IllegalArgumentException("数据库'" + mMetaData.getRealDatabaseName() + "'的表'" + mMetaData.getTableName() + "'不存在列'" + columnName + "'或该列数据类型不匹配");
+        }
+        return fieldType;
+    }
+
+    FieldType getValidFieldType(String columnName, FieldType... fieldTypes) {
+        if (TextUtils.isEmpty(columnName)) {
+            return null;
+        }
+        if (mFieldTypes == null) {
+            mFieldTypes = collectFieldTypes();
+        }
+
+        FieldType targetType = mFieldTypes.get(columnName);
+        if (targetType == null) {
+            return null;
+        }
+
+        if (fieldTypes == null || fieldTypes.length == 0) {
+            return targetType;
+        }
+
+        for (FieldType type : fieldTypes) {
+            if (type == targetType) {
+                return type;
+            }
+        }
+        return null;
     }
 
     /**
@@ -95,29 +135,8 @@ public abstract class BaseDao<T> {
      * @param fieldTypes
      * @return
      */
-    boolean isColumnValid(String columnName, FieldType... fieldTypes) {
-        if (TextUtils.isEmpty(columnName)) {
-            return false;
-        }
-        if (mFieldTypes == null) {
-            mFieldTypes = collectFieldTypes();
-        }
-
-        FieldType targetType = mFieldTypes.get(columnName);
-        if (targetType == null) {
-            return false;
-        }
-
-        if (fieldTypes == null || fieldTypes.length == 0) {
-            return true;
-        }
-
-        for (FieldType type : fieldTypes) {
-            if (type == targetType) {
-                return true;
-            }
-        }
-        return false;
+    boolean isFieldTypeValid(String columnName, FieldType... fieldTypes) {
+        return getValidFieldType(columnName, fieldTypes) != null;
     }
 
 
