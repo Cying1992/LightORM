@@ -312,14 +312,12 @@ public abstract class BaseDao<T> {
         return false;
     }
 
-    void deleteAll(Iterator<T> entities) {
+    void deleteAll(Iterable<T> entities) {
         SQLiteDatabase db = openDatabase();
         db.beginTransaction();
         try {
-            T entity;
             Long id;
-            while (entities.hasNext()) {
-                entity = entities.next();
+            for (T entity : entities) {
                 if (entity != null) {
                     id = getIdentity(entity);
                     if (id != null) {

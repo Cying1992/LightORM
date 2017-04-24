@@ -548,6 +548,7 @@ public class Query<T> {
         return Collections.unmodifiableList(query.getColumnValues(metaData.getPrimaryKey(), BaseDao.FieldType.INTEGER));
     }
 
+
     @SuppressWarnings("unchecked")
     public List<Double> findDoubles(String columnName) {
         BaseDao.FieldType fieldType = dao.checkAndGetFieldType(columnName, BaseDao.FieldType.DOUBLE);

@@ -225,7 +225,7 @@ public final class LightORM {
         baseDao.saveAll(entities);
     }
 
-    public <T> void deleteAll(@NonNull Class<T> entityClass, @NonNull Iterator<T> entities) {
+    public <T> void deleteAll(@NonNull Class<T> entityClass, @NonNull Iterable<T> entities) {
         BaseDao<T> baseDao = getDao(entityClass);
         baseDao.deleteAll(entities);
     }
