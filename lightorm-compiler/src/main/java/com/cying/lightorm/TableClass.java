@@ -86,6 +86,10 @@ class TableClass {
         return entityElement;
     }
 
+    String getDatabaseName() {
+        return databaseName;
+    }
+
     String getTableName() {
         return tableName;
     }

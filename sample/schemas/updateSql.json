@@ -1,0 +1,14 @@
+[
+  {
+    "database": "db.db",
+    "updateSql": [
+      {
+        "from": 1,
+        "to": 2,
+        "sql": [
+          "ALTER TABLE [tabile] ADD [addTest] TEXT"
+        ]
+      }
+    ]
+  }
+]

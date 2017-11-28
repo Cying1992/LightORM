@@ -5,11 +5,18 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -45,6 +52,15 @@ public class LightORMProcessor extends AbstractProcessor {
     static Types typeUtils;
     private boolean isGenerated = false;
 
+    private static final String KEY_UPDATE_SQL_LOCATION = "orm.updateSqlLocation";
+    private static final String PROPERTY_FROM_VERSION = "from";
+    private static final String PROPERTY_TO_VERSION = "to";
+    private static final String PROPERTY_SQL = "sql";
+    private static final String PROPERTY_DATABASE = "database";
+    private static final String PROPERTY_UPDATE_SQL = "updateSql";
+
+    private String updateSqlLocation;
+
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
@@ -52,6 +68,8 @@ public class LightORMProcessor extends AbstractProcessor {
         elementUtils = processingEnv.getElementUtils();
         messager = processingEnv.getMessager();
         typeUtils = processingEnv.getTypeUtils();
+        Map<String, String> options = processingEnv.getOptions();
+        updateSqlLocation = options.get(KEY_UPDATE_SQL_LOCATION);
     }
 
     private Set<Class<? extends Annotation>> getSupportedAnnotations() {
@@ -121,8 +139,14 @@ public class LightORMProcessor extends AbstractProcessor {
             params.add(Class.class);
             params.add(tableClass.getDaoClassCanonicalName());
         }
-        formatBuilder.append("\n}catch($T e){}\n");
+        formatBuilder.append("\n}catch($T e){e.printStackTrace();}\n");
         params.add(Exception.class);
+        try {
+            readUpdateSqls(formatBuilder, params);
+        } catch (Exception e) {
+            e.printStackTrace();
+            error(null, "生成updateSql失败");
+        }
         builder.addStaticBlock(CodeBlock.of(formatBuilder.toString(), params.toArray()));
 
         JavaFile javaFile = JavaFile.builder(LightORM.PACKAGE_DAO_COLLECTIONS, builder.build()).build();
@@ -130,6 +154,77 @@ public class LightORMProcessor extends AbstractProcessor {
 
     }
 
+    private void readUpdateSqls(StringBuilder formatBuilder, List<Object> params) throws Exception {
+        if (updateSqlLocation == null) {
+            return;
+        }
+        String json = readFile(updateSqlLocation);
+        JSONArray jsonArray = new JSONArray(json);
+        int count = jsonArray.length();
+        Set<String> databaseNames = new HashSet<>();
+        for (int i = 0; i < count; i++) {
+            JSONObject dbItem = jsonArray.getJSONObject(i);
+            String databaseName = dbItem.getString(PROPERTY_DATABASE);
+            if (databaseName == null || databaseName.length() == 0) {
+                error(null, "数据库json配置不正确，database不能为空");
+                return;
+            }
+            if (databaseNames.contains(databaseName)) {
+                error(null, "数据库json配置不正确，存在同名的database配置，名称为：" + databaseName);
+                return;
+            }
+            databaseNames.add(databaseName);
+            JSONArray updateSqls = dbItem.getJSONArray(PROPERTY_UPDATE_SQL);
+            int updateSqlsCount = updateSqls.length();
+            if (updateSqlsCount == 0) {
+                continue;
+            }
+            formatBuilder.append("$T.addUpdateSql($S");
+            params.add(LightORM.class);
+            params.add(databaseName);
+
+            for (int j = 0; j < updateSqlsCount; j++) {
+                JSONObject updateSqlItem = updateSqls.getJSONObject(j);
+                int fromVersion = updateSqlItem.getInt(PROPERTY_FROM_VERSION);
+                int toVersion = updateSqlItem.getInt(PROPERTY_TO_VERSION);
+                if (fromVersion < 1 || toVersion < 1 || toVersion - fromVersion != 1) {
+                    error(null, "数据库json配置不正确，toVersion-fromVersion须等于1，且版本号不能小于1");
+                    return;
+                }
+                JSONArray sqlItem = updateSqlItem.getJSONArray(PROPERTY_SQL);
+                int sqlCount = sqlItem.length();
+                String[] sqls = new String[sqlCount];
+                for (int k = 0; k < sqlCount; k++) {
+                    sqls[k] = sqlItem.getString(k);
+                }
+                formatBuilder.append(",\n$T.create($L,$L");
+                params.add(UpdateSql.class);
+                params.add(fromVersion);
+                params.add(toVersion);
+
+                for (String sql : sqls) {
+                    formatBuilder.append(",$S");
+                    params.add(sql);
+                }
+                formatBuilder.append(")");
+            }
+
+            formatBuilder.append("\n);\n");
+        }
+    }
+
+    private static String readFile(String path) throws Exception {
+        FileReader reader = new FileReader(path);
+        int bufferSize = 8 * 1024;
+        char[] buffer = new char[bufferSize];
+        int chars = reader.read(buffer);
+        StringWriter out = new StringWriter();
+        while (chars >= 0) {
+            out.write(buffer, 0, chars);
+            chars = reader.read(buffer);
+        }
+        return out.toString();
+    }
 
     private List<TableClass> findTableClass(RoundEnvironment roundEnv) {
         List<TableClass> tableClassList = new ArrayList<>();

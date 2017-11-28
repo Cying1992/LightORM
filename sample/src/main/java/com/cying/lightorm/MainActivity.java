@@ -23,7 +23,7 @@ public class MainActivity extends AppCompatActivity {
                 .or()
                 .between("a", 3, 4)
                 .endGroup()
-                .findAll(Sort.create().groupBy("k").limit(1, 2));
+                .findAll();
 
     }
 }

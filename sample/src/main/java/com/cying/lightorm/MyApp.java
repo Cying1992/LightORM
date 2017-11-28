@@ -14,7 +14,8 @@ public class MyApp extends Application {
     }
 
     private void initORM() {
-        DatabaseConfiguration dc = new DatabaseConfiguration("db.db", 1);
+        DatabaseConfiguration dc = new DatabaseConfiguration("db.db", 2);
+        LightORM.setDebug(true);
         LightORM.init(this, dc);
     }
 }

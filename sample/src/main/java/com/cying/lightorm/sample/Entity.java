@@ -6,7 +6,6 @@ import com.cying.lightorm.Table;
 
 /**
  * Created by Cying on 17/3/29.
-
  */
 @Table("tabile")
 public class Entity {
@@ -17,6 +16,9 @@ public class Entity {
 
     @Column
     String name;
+
+    @Column
+    String addTest;
 
     void m() {
     }

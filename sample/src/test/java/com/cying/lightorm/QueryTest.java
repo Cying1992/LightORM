@@ -36,6 +36,7 @@ public class QueryTest {
     static {
         DatabaseConfiguration config = new DatabaseConfiguration(databaseName, 1);
         long current = System.currentTimeMillis();
+        LightORM.setAddUpdateSqlEnabled(false);
         LightORM.init(Robolectric.setupActivity(Activity.class), config);
         System.out.println("cost time : " + (System.currentTimeMillis() - current));
         LightORM.setDebug(true);

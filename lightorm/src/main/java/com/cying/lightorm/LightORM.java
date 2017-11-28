@@ -22,6 +22,24 @@ public final class LightORM {
     private static boolean DEBUG = false;
     private static final LightORM INSTANCE = new LightORM();
     private static boolean hasInit = false;
+    private static boolean enableAddUpdateSql = true;
+
+    static void addUpdateSql(String databaseName, UpdateSql... sqls) {
+        if (!enableAddUpdateSql || sqls == null) {
+            return;
+        }
+        LightORM orm = LightORM.getInstance();
+        if (TextUtils.isEmpty(databaseName)) {
+            databaseName = orm.defaultDatabaseName;
+        }
+        Database database = orm.databaseMap.get(databaseName);
+        if (database == null) {
+            throw new IllegalArgumentException("初始化LightORM失败，不存在数据库" + databaseName);
+        }
+        for (UpdateSql updateSql : sqls) {
+            database.addUpdateSql(updateSql.fromVersion, updateSql.toVersion, updateSql.sqls);
+        }
+    }
 
     public static LightORM getInstance() {
         if (!hasInit) {
@@ -34,10 +52,19 @@ public final class LightORM {
         DEBUG = debug;
     }
 
+    /**
+     * 设置是否要读取数据库升级的json配置文件并自动升级数据库，默认值是true，请在{@link #init(Context, DatabaseConfiguration, DatabaseConfiguration...)}方法调用前调用，否则无效
+     *
+     * @param enabled 是否启用，默认启用
+     */
+    public static void setAddUpdateSqlEnabled(boolean enabled) {
+        enableAddUpdateSql = enabled;
+    }
+
     static void debug(String message) {
         if (DEBUG) {
             Log.i(TAG, message);
-            System.out.println(message);
+            //System.out.println(message);
         }
     }
 
@@ -111,7 +138,7 @@ public final class LightORM {
         hasInit = true;
         try {
             //触发saveDao，收集所有BaseDao对象
-            Class.forName(PACKAGE_DAO_COLLECTIONS + "." + CLASS_DAO_COLLECTIONS).newInstance();
+            Class.forName(PACKAGE_DAO_COLLECTIONS + "." + CLASS_DAO_COLLECTIONS);
         } catch (Exception e) {
             throw new IllegalStateException("LightORM初始化失败", e);
         }
