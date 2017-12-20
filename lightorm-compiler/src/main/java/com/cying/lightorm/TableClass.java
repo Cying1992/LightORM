@@ -1,8 +1,5 @@
 package com.cying.lightorm;
 
-import android.content.ContentValues;
-import android.database.Cursor;
-
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
@@ -47,6 +44,8 @@ import static com.cying.lightorm.LightORMProcessor.error;
  */
 class TableClass {
 
+    static ClassName ContentValuesClassName = ClassName.get("android.content", "ContentValues");
+    static ClassName CursorClassName = ClassName.get("android.database", "Cursor");
     private final TypeElement entityElement;
     private final String packageName;
     private final String entityClassName;
@@ -296,7 +295,7 @@ class TableClass {
                 .addAnnotation(Override.class)
                 .addModifiers(Modifier.PROTECTED)
                 .returns(entityTypeName)
-                .addParameter(Cursor.class, PARAM_NAME_CURSOR)
+                .addParameter(CursorClassName, PARAM_NAME_CURSOR)
                 .addStatement("$T $L = new $T()", entityElement, PARAM_NAME_ENTITY, entityElement)
                 .addStatement("$L.$L = getLong($L,$S)", PARAM_NAME_ENTITY, primaryKeyFieldName, PARAM_NAME_CURSOR, primaryKeyColumnName);
 
@@ -319,9 +318,9 @@ class TableClass {
         MethodSpec.Builder entityToValuesMethod = MethodSpec.methodBuilder(METHOD_ENTITY_TO_VALUES)
                 .addAnnotation(Override.class)
                 .addModifiers(Modifier.PROTECTED)
-                .returns(ContentValues.class)
+                .returns(ContentValuesClassName)
                 .addParameter(entityTypeName, PARAM_NAME_ENTITY)
-                .addStatement("$T $L = new $T()", ContentValues.class, PARAM_NAME_CONTENT_VALUES, ContentValues.class)
+                .addStatement("$T $L = new $T()", ContentValuesClassName, PARAM_NAME_CONTENT_VALUES, ContentValuesClassName)
                 .addStatement("$L.put($S,$L.$L)", PARAM_NAME_CONTENT_VALUES, primaryKeyColumnName, PARAM_NAME_ENTITY, primaryKeyFieldName);
         for (ColumnField columnField : columnFieldMap.values()) {
 

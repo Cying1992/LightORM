@@ -1,12 +1,11 @@
 package com.cying.lightorm;
 
 import com.google.auto.service.AutoService;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -159,12 +158,14 @@ public class LightORMProcessor extends AbstractProcessor {
             return;
         }
         String json = readFile(updateSqlLocation);
-        JSONArray jsonArray = new JSONArray(json);
-        int count = jsonArray.length();
+
+        List<DatabaseUpdateSql> databaseUpdateSqls = new Gson().fromJson(json, new TypeToken<List<DatabaseUpdateSql>>() {
+        }.getType());
+
+
         Set<String> databaseNames = new HashSet<>();
-        for (int i = 0; i < count; i++) {
-            JSONObject dbItem = jsonArray.getJSONObject(i);
-            String databaseName = dbItem.getString(PROPERTY_DATABASE);
+        for (DatabaseUpdateSql dbItem : databaseUpdateSqls) {
+            String databaseName = dbItem.database;
             if (databaseName == null || databaseName.length() == 0) {
                 error(null, "数据库json配置不正确，database不能为空");
                 return;
@@ -174,8 +175,8 @@ public class LightORMProcessor extends AbstractProcessor {
                 return;
             }
             databaseNames.add(databaseName);
-            JSONArray updateSqls = dbItem.getJSONArray(PROPERTY_UPDATE_SQL);
-            int updateSqlsCount = updateSqls.length();
+            List<DatabaseUpdateSql.Sql> updateSqls = dbItem.updateSql;
+            int updateSqlsCount = updateSqls.size();
             if (updateSqlsCount == 0) {
                 continue;
             }
@@ -183,28 +184,31 @@ public class LightORMProcessor extends AbstractProcessor {
             params.add(LightORM.class);
             params.add(databaseName);
 
-            for (int j = 0; j < updateSqlsCount; j++) {
-                JSONObject updateSqlItem = updateSqls.getJSONObject(j);
-                int fromVersion = updateSqlItem.getInt(PROPERTY_FROM_VERSION);
-                int toVersion = updateSqlItem.getInt(PROPERTY_TO_VERSION);
+            for (DatabaseUpdateSql.Sql sql : updateSqls) {
+                int fromVersion = sql.from;
+                int toVersion = sql.to;
                 if (fromVersion < 1 || toVersion < 1 || toVersion - fromVersion != 1) {
-                    error(null, "数据库json配置不正确，toVersion-fromVersion须等于1，且版本号不能小于1");
+                    error(null, "数据库" + databaseName + "的json配置不正确，to-from的结果须等于1，且from和to都不能小于1，现在from=" + fromVersion + "，to=" + toVersion);
                     return;
                 }
-                JSONArray sqlItem = updateSqlItem.getJSONArray(PROPERTY_SQL);
-                int sqlCount = sqlItem.length();
+                List<String> sqlItem = sql.sql;
+                int sqlCount = sqlItem.size();
+                if (sqlCount == 0) {
+                    error(null, "数据库" + databaseName + "的json配置不正确，from=" + fromVersion + "，to=" + toVersion + "的sql为空");
+                    return;
+                }
                 String[] sqls = new String[sqlCount];
                 for (int k = 0; k < sqlCount; k++) {
-                    sqls[k] = sqlItem.getString(k);
+                    sqls[k] = sqlItem.get(k);
                 }
                 formatBuilder.append(",\n$T.create($L,$L");
                 params.add(UpdateSql.class);
                 params.add(fromVersion);
                 params.add(toVersion);
 
-                for (String sql : sqls) {
+                for (String sqlString : sqls) {
                     formatBuilder.append(",$S");
-                    params.add(sql);
+                    params.add(sqlString);
                 }
                 formatBuilder.append(")");
             }
